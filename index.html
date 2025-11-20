@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>روبوت دردشة ذكي</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/Eya2d/Wave-cloud/wave-cloud.js"></script>
+    <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    font-family: 'Cairo', sans-serif;
+    background: #dee7ff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+button {
+    cursor: pointer;
+}
+svg,ion-icon {
+    overflow: hidden;
+    height: 24px;
+    width: 24px;
+    display: flex;
+}
+.chat-container {
+    position: relative;
+    transition: all 0.2s;
+    width: 100%;
+    max-width: 420px;
+    background: #f8f9ff;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: fadeIn 0.5s ease-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.chat-header {
+    background-color: #f8f9ff;
+    /* background: linear-gradient(135deg, #4e54c8, #8f94fb); */
+    color: white;
+    padding: 16px;
+    font-weight: 700;
+    font-size: 1.2rem;
+    position: relative;
+    overflow: hidden;
+}
+.chat-header button {
+    fill: #767ce8;
+    color: #767ce8;
+    background: #aca1ff26;
+    border: none;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 30%;
+}
+.chat-header button:hover {
+    background: #aca1ff42;
+}
+.chat-header .ripple {
+    background-color: #aca1ff26;
+}
+.chat-header .fffde {
+    position: relative;
+    user-select: none;
+    z-index: 3;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.fffde-img {
+    display: flex;
+    align-items: center;
+    direction: ltr;
+    height: 0;
+}
+.fffde-img a {
+    position: relative;
+    background: #fff;
+    overflow: hidden;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    margin: 0 -4px;
+    outline: solid 2px #9096ff;
+}
+.fffde-img a img {
+    height: 100%;
+}
+
+
+.messages {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    min-height: 60vh;
+    max-height: 60vh;
+    background: #f8f9ff;
+}
+
+.message {
+    user-select: none;
+    font-size: 14px;
+    margin: 10px 0;
+    padding: 9px;
+    border-radius: 18px;
+    max-width: 69%;
+    width: max-content;
+    word-wrap: break-word;
+    animation: slideIn 0.3s ease-out;
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+/* .message:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+} */
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.message.user {
+    background: #4e54c8;
+    color: white;
+    align-self: flex-end;
+    margin-left: auto;
+    border-top-right-radius: 4px;
+    margin-right: 35px;
+}
+.message.user::after {
+    position: absolute;
+    content: 'O_O';
+    right: 0;
+    top: 0;
+    margin: 0px -40px;
+    width: 35px;
+    height: 35px;
+    border-radius: 25px;
+    background: white;
+    color: #667eea;
+    font-size: 12px;
+    outline: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.message.bot {
+    background: #e2e8f0;
+    color: #2d3748;
+    align-self: flex-start;
+    margin-right: auto;
+    border-top-left-radius: 4px;
+    margin-left: 35px;
+}
+.message.bot::after {
+    position: absolute;
+    content: '🤖';
+    left: 0;
+    top: 0;
+    margin: 0px -40px;
+    width: 35px;
+    height: 35px;
+    border-radius: 25px;
+    background: white;
+    outline: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.search-box {
+    padding: 5px;
+    background: #ffffff00;
+    border-top: 1px solid #e2e8f000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    margin: 10px;
+    border-radius: 50px;
+    overflow: hidden;
+}
+.search-box::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    /* left: 0; */
+    width: -webkit-fill-available;
+    border-radius: 5px;
+    margin: auto 27px;
+    height: 2px;
+    background: linear-gradient(90deg, #4e54c8, #8f94fb);
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.3s ease;
+}
+.search-box:focus-within::after {
+    transform: scaleX(1);
+    transform-origin: left;
+}
+.search-box input {
+    padding: 14px;
+    width: 100%;
+    border-radius: 30px;
+    border: 1px solid #cbd5e0;
+    font-size: 1rem;
+    transition: all 0.3s;
+    outline: none;
+}
+.search-box input:focus {
+    border-color: #4e54c8;
+    box-shadow: 0 0 0 3px rgba(78, 84, 200, 0.1);
+    transform: translateY(-2px);
+}
+.suggestions {
+    position: absolute;
+    z-index: 10;
+    background-color: white;
+    bottom: 79px;
+    width: 100%;
+    transition: 0.3s;
+    display: flex;
+    flex-direction: column;
+    gap: 0px;
+    max-height: 233px;
+    overflow-y: auto;
+    scrollbar-width: none;
+    box-shadow: 0px -3px 7px #00000014, 0px 1px 2px #00000008;
+    border-radius: 20px;
+    margin: 0 10px;
+    width: -webkit-fill-available;
+}
+.suggestions::after {
+    position: absolute;
+    content: 'مساعد ذكي';
+    top: 0;
+    right: 0;
+    margin: 10px;
+    margin-right: 15px;
+}
+.suggestions button {
+    padding: 12px;
+    border: none;
+    background: #f1f5f9;
+    border-radius: 25px;
+    cursor: pointer;
+    text-align: right;
+    font-size: 0.95rem;
+    color: #4a5568;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    margin: 0 10px;
+    margin-top: 12px;
+    position: relative;
+    overflow: hidden;
+    min-height: 43px;
+    width: -webkit-fill-available;
+}
+.suggestions button:hover {
+    background: #e2e8f0;
+    border-color: #4e54c8;
+    padding-right: 15px;
+}
+.suggestions button:first-child {
+    margin-top: 50px;
+}
+.suggestions button:last-child {
+    margin-bottom: 12px;
+}
+/* تحسين التمرير */
+.messages::-webkit-scrollbar,
+.suggestions::-webkit-scrollbar {
+    width: 6px;
+}
+.messages::-webkit-scrollbar-track,
+.suggestions::-webkit-scrollbar-track {
+    background: transparent;
+}
+.messages::-webkit-scrollbar-thumb,
+.suggestions::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.2);
+    border-radius: 3px;
+}
+@media (max-width: 480px) {
+    .chat-container {
+        border-radius: 15px;
+        max-width: 100%;
+    }
+    .chat-header {
+        font-size: 1.1rem;
+    }
+    body button,a {
+        cursor: context-menu;
+    }
+}
+
+/* أنماط إضافية */
+.typing-indicator {
+    display: none;
+    align-items: center;
+    padding: 12px 16px;
+    margin: 10px 0;
+    background: #e2e8f0;
+    border-radius: 18px;
+    width: max-content;
+    max-width: 75%;
+    align-self: flex-start;
+    margin-right: auto;
+    border-bottom-left-radius: 4px;
+}
+
+.typing-indicator.active {
+    display: flex;
+}
+
+.typing-indicator span {
+    height: 8px;
+    width: 8px;
+    background-color: #4e54c8;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 0 2px;
+    animation: typing 1.4s infinite;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.5;
+    }
+    30% {
+        transform: translateY(-10px);
+        opacity: 1;
+    }
+}
+
+.chat-header::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg,
+        transparent,
+        rgba(255, 255, 255, 0.1),
+        transparent
+    );
+    transform: rotate(45deg);
+    animation: shine 3s infinite;
+}
+.no {
+    color: rgb(160, 174, 192);
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 11.5px;
+}
+.more-btn, .full-btn {
+    margin: 0 35px;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 25px;
+    font-family: sans-serif;
+    background: #757bff;
+    color: white;
+}
+
+
+
+@keyframes shine {
+    0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+}
+
+/* تحسينات للوضع الليلي */
+@media (prefers-color-scheme: dark) {
+    body {
+        background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    }
+    
+    .chat-container {
+        background: #2d3748;
+        color: #e2e8f0;
+    }
+    
+    .messages {
+        background: #1a202c;
+    }
+    
+    .message.bot {
+        background: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    .search-box {
+        background: #2d3748;
+        border-top-color: #4a5568;
+    }
+    
+    .search-box input {
+        background: #4a5568;
+        color: #e2e8f0;
+        border-color: #718096;
+    }
+    
+    .suggestions {
+        background: #2d3748;
+    }
+    
+    .suggestions button {
+        background: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    .suggestions button:hover {
+        background: #718096;
+    }
+}
+
+/* تحسينات للوصولية */
+.search-box input:focus,
+.suggestions button:focus {
+    outline-color: #4e54c8;
+    outline-offset: 2px;
+}
+
+/* تأثيرات للرسائل الجديدة */
+.message.new {
+    animation: messageSlideIn 0.5s ease-out;
+}
+
+@keyframes messageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* تحسينات للأجهزة المحمولة */
+@media (max-width: 480px) {
+    body {
+        padding: 0;
+        overflow: hidden;
+    }
+    .message {
+        max-width: 85%;
+    }
+    
+    .chat-container {
+        height: 100vh;
+        border-radius: 0;
+    }
+    
+    .messages {
+        max-height: 100%;
+    }
+}
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header Wave-all-center">
+        <div class="fffde">
+            <button><ion-icon name="share-social-outline"></ion-icon></button>
+            <div class="fffde-img">
+                <a><img src="image/3.jpg" alt=""></a>
+                <a style="z-index: 3;"><img src="image/2.jpg" alt=""></a>
+                <a style="z-index: 5;"><img src="image/4.webp" alt=""></a>
+            </div>
+            <button id="newChatBtn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 0.599609C3.91309 0.599609 0.599609 3.91309 0.599609 8C0.599609 9.13376 0.855461 10.2098 1.3125 11.1719L1.5918 11.7588L2.76562 11.2012L2.48633 10.6143C2.11034 9.82278 1.90039 8.93675 1.90039 8C1.90039 4.63106 4.63106 1.90039 8 1.90039C11.3689 1.90039 14.0996 4.63106 14.0996 8C14.0996 11.3689 11.3689 14.0996 8 14.0996C7.31041 14.0996 6.80528 14.0514 6.35742 13.9277C5.91623 13.8059 5.49768 13.6021 4.99707 13.2529C4.26492 12.7422 3.21611 12.5616 2.35156 13.1074L2.33789 13.1162L2.32422 13.126L1.58789 13.6436L2.01953 14.9297L3.0459 14.207C3.36351 14.0065 3.83838 14.0294 4.25293 14.3184C4.84547 14.7317 5.39743 15.011 6.01172 15.1807C6.61947 15.3485 7.25549 15.4004 8 15.4004C12.0869 15.4004 15.4004 12.0869 15.4004 8C15.4004 3.91309 12.0869 0.599609 8 0.599609ZM7.34473 4.93945V7.34961H4.93945V8.65039H7.34473V11.0605H8.64551V8.65039H11.0605V7.34961H8.64551V4.93945H7.34473Z" fill="currentColor"></path></svg></button>
+        </div>
+    </div>
+    <div class="messages" id="messages"></div>
+    <div class="suggestions Wave-all" id="suggestions"></div>
+    <div class="search-box">
+        <input type="search" id="searchInput" placeholder="اكتب سؤالك هنا..." autofocus>
+    </div>
+</div>
+
+<script src="script.js"></script>
+<script src="data.js"></script>
+
+<!-- 
+
+        Wave-cloud لإظهار الموجة من مكان النقر
+
+        Wave-center  لإظهار الموجه من المنتصف
+
+        Wave-all  لإظهار الموجة من مكان النقر لعدة عناصر كلاس أضف للديف الرئيسي
+
+        Wave-all-center اضف للديف الرئيسي لإظهار الموجة من المنتصف لعدة عناصر كلاس
+
+    -->
+</body>
+</html>
