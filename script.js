@@ -3,7 +3,47 @@ window.onload = () => {
     const searchInput = document.getElementById('searchInput');
     const suggestionsDiv = document.getElementById('suggestions');
     const newChatBtn = document.getElementById('newChatBtn');
+    const shareBtn = document.getElementById('shareBtn'); // زر المشاركة الجديد
     let selectedIndex = 0;
+
+    // ======== زر مشاركة الرابط ========
+    shareBtn.addEventListener('click', async () => {
+        const currentUrl = window.location.href;
+        
+        try {
+            if (navigator.share) {
+                // إذا كان المتصفح يدعم Web Share API
+                await navigator.share({
+                    title: 'تفسير القرآن الكريم',
+                    text: 'استمع إلى تفسير القرآن الكريم',
+                    url: currentUrl
+                });
+            } else if (navigator.clipboard) {
+                // نسخ الرابط إلى الحافظة
+                await navigator.clipboard.writeText(currentUrl);
+                alert('✓ تم نسخ الرابط إلى الحافظة');
+            } else {
+                // طريقة بديلة للنسخ
+                const textArea = document.createElement('textarea');
+                textArea.value = currentUrl;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('✓ تم نسخ الرابط إلى الحافظة');
+            }
+        } catch (error) {
+            console.error('Error sharing:', error);
+            // طريقة احتياطية
+            const textArea = document.createElement('textarea');
+            textArea.value = currentUrl;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            alert('✓ تم نسخ الرابط إلى الحافظة');
+        }
+    });
 
     // ======== توليد اقتراحات ديناميكية لكل سورة وآياتها ========
     let dynamicSuggestions = [];
