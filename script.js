@@ -6,6 +6,11 @@ window.onload = () => {
     const shareBtn = document.getElementById('shareBtn');
     let selectedIndex = 0;
     let isNavigatingWithArrows = false;
+    
+    // ======== تحسينات الأداء ========
+    let searchCache = new Map(); // كاش للبحث
+    let debounceTimer; // لمنع البحث المتكرر السريع
+    let preprocessedData = null; // بيانات معالجة مسبقاً
 
     // ======== زر مشاركة الرابط ========
     shareBtn.addEventListener('click', async () => {
@@ -42,39 +47,62 @@ window.onload = () => {
         }
     });
 
-    // ======== توليد اقتراحات ديناميكية لكل سورة وآياتها ========
-    let dynamicSuggestions = [];
-
-    // دالة محسنة لتقسيم الآيات - تضمن جلب النص الكامل للآية
-    function generateAyahSuggestions() {
-        dynamicSuggestions = [];
+    // ======== معالجة مسبقة للبيانات ========
+    function preprocessData() {
+        if (preprocessedData) return preprocessedData;
         
-        faq.forEach(item => {
-            // تقسيم النص إلى آيات باستخدام regex محسن يضمن جلب النص الكامل
-            const ayahMatches = item.a.match(/\d+\.\s*[^]*?(?=\d+\.|$)/g);
+        console.time('معالجة البيانات');
+        preprocessedData = {
+            dynamicSuggestions: [],
+            searchIndex: new Map() // فهرس للبحث السريع
+        };
+
+        // معالجة مسبقة لجميع السور والآيات
+        faq.forEach((item, surahIndex) => {
+            const ayahMatches = item.a.match(/\d+\.\s*[^]*?(?=\d+\.|$)/g) || [];
             
-            if (ayahMatches) {
-                ayahMatches.forEach(part => {
-                    const match = part.match(/^(\d+)\./);
-                    if (match) {
-                        const ayahNum = match[1];
-                        dynamicSuggestions.push({
-                            q: `${item.q} آية ${ayahNum}`,
-                            a: part.trim(),
-                            surah: item.q,
-                            ayah: parseInt(ayahNum),
-                            fullText: part.trim()
-                        });
-                    }
-                });
-            }
+            ayahMatches.forEach(part => {
+                const match = part.match(/^(\d+)\./);
+                if (match) {
+                    const ayahNum = parseInt(match[1]);
+                    const suggestion = {
+                        q: `${item.q} آية ${ayahNum}`,
+                        a: part.trim(),
+                        surah: item.q,
+                        ayah: ayahNum,
+                        fullText: part.trim(),
+                        surahIndex: surahIndex
+                    };
+                    
+                    preprocessedData.dynamicSuggestions.push(suggestion);
+                    
+                    // إنشاء فهرس للبحث السريع
+                    const words = part.toLowerCase().split(/\s+/);
+                    words.forEach(word => {
+                        if (word.length > 2) { // تجاهل الكلمات القصيرة
+                            if (!preprocessedData.searchIndex.has(word)) {
+                                preprocessedData.searchIndex.set(word, []);
+                            }
+                            preprocessedData.searchIndex.get(word).push(suggestion);
+                        }
+                    });
+                }
+            });
         });
         
-        console.log('تم توليد اقتراحات لـ:', dynamicSuggestions.length, 'آية');
+        console.timeEnd('معالجة البيانات');
+        console.log('تم معالجة:', preprocessedData.dynamicSuggestions.length, 'آية');
+        return preprocessedData;
+    }
+
+    // ======== توليد اقتراحات ديناميكية - محسنة ========
+    function generateAyahSuggestions() {
+        const data = preprocessData();
+        return data.dynamicSuggestions;
     }
 
     // توليد الاقتراحات عند التحميل
-    generateAyahSuggestions();
+    const dynamicSuggestions = generateAyahSuggestions();
 
     // دمج الاقتراحات الديناميكية مع الاقتراحات الأصلية
     function getAllSuggestions() {
@@ -101,6 +129,12 @@ window.onload = () => {
         msg.classList.add('message', sender);
         if (isNew) msg.classList.add('new');
         msg.textContent = text;
+        
+        // إضافة border-radius لرسائل البوت
+        if (sender === 'bot') {
+            msg.style.borderRadius = '18px';
+        }
+        
         messagesDiv.appendChild(msg);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
         saveMessages();
@@ -146,7 +180,8 @@ window.onload = () => {
 
             moreBtn.onclick = () => {
                 if (currentIndex < chunks.length) {
-                    addMessage(chunks[currentIndex], "bot");
+                    const additionalMessage = addMessage(chunks[currentIndex], "bot");
+                    additionalMessage.style.borderRadius = '18px';
                     currentIndex++;
                     buttonDiv.remove();
 
@@ -163,7 +198,8 @@ window.onload = () => {
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
-        addMessage(chunks[0], "bot");
+        const firstMessage = addMessage(chunks[0], "bot");
+        firstMessage.style.borderRadius = '18px';
         currentIndex = 1;
 
         if (currentIndex < chunks.length) {
@@ -171,200 +207,195 @@ window.onload = () => {
         }
     }
 
-    // ======== استخراج مقتطف من النص حول الكلمة المطلوبة ========
-    function extractSnippet(text, searchWords, maxWords = 8) {
-        const words = text.split(/\s+/);
-        let bestSnippet = '';
-        let bestScore = 0;
+    // ======== استخراج مقتطف سريع ========
+    function extractSnippetFast(text, searchWords, maxWords = 8) {
+        // بحث سريع عن أول ظهور لأي كلمة بحث
+        const lowerText = text.toLowerCase();
+        let bestPosition = -1;
         
-        // البحث عن أفضل مقطع يحتوي على كلمات البحث
-        for (let i = 0; i < words.length; i++) {
-            let snippetWords = [];
-            let score = 0;
-            
-            // جمع الكلمات المحيطة (3 كلمات قبل و5 كلمات بعد)
-            const start = Math.max(0, i - 3);
-            const end = Math.min(words.length, i + 5);
-            
-            for (let j = start; j < end; j++) {
-                snippetWords.push(words[j]);
-                
-                // حساب النقاط إذا كانت الكلمة مطابقة
-                const word = words[j].toLowerCase().replace(/[.,;!?()]/g, '');
-                if (searchWords.some(searchWord => word.includes(searchWord))) {
-                    score += 3;
-                    // نقاط إضافية إذا كانت مطابقة تامة
-                    if (searchWords.includes(word)) {
-                        score += 5;
-                    }
-                }
-            }
-            
-            if (score > bestScore) {
-                bestScore = score;
-                bestSnippet = snippetWords.join(' ');
-                
-                // تقليل المقتطف إذا كان طويلاً
-                const snippetWordCount = bestSnippet.split(/\s+/).length;
-                if (snippetWordCount > maxWords) {
-                    const snippetWordsArray = bestSnippet.split(/\s+/);
-                    bestSnippet = snippetWordsArray.slice(0, maxWords).join(' ') + '...';
-                }
+        for (const word of searchWords) {
+            const pos = lowerText.indexOf(word);
+            if (pos !== -1 && (bestPosition === -1 || pos < bestPosition)) {
+                bestPosition = pos;
             }
         }
         
-        return bestSnippet || words.slice(0, Math.min(6, words.length)).join(' ') + '...';
+        if (bestPosition === -1) {
+            return text.split(/\s+/).slice(0, 6).join(' ') + '...';
+        }
+        
+        // استخراج مقتطف حول الموضع
+        const start = Math.max(0, bestPosition - 30);
+        const end = Math.min(text.length, bestPosition + 70);
+        let snippet = text.substring(start, end);
+        
+        // تقصير إذا كان طويلاً
+        const words = snippet.split(/\s+/);
+        if (words.length > maxWords) {
+            snippet = words.slice(0, maxWords).join(' ') + '...';
+        }
+        
+        return snippet;
     }
 
-    // ======== البحث النصي المتقدم في جميع الإجابات ========
-    function searchInAllAnswers(searchText) {
-        const results = [];
+    // ======== البحث النصي السريع ========
+    function searchInAllAnswersFast(searchText) {
+        // التحقق من الكاش أولاً
+        if (searchCache.has(searchText)) {
+            return searchCache.get(searchText);
+        }
+
         const searchWords = searchText.toLowerCase().split(/\s+/).filter(word => word.length > 1);
+        if (searchWords.length === 0) return [];
+
+        const data = preprocessData();
+        const results = new Map(); // استخدام Map لمنع التكرارات
         
-        if (searchWords.length === 0) return results;
-
-        // البحث في جميع السور والآيات
-        faq.forEach(surah => {
-            // تقسيم السورة إلى آيات
-            const ayahMatches = surah.a.match(/\d+\.\s*[^]*?(?=\d+\.|$)/g) || [];
-            
-            ayahMatches.forEach(ayahPart => {
-                const ayahText = ayahPart.toLowerCase();
-                let matchScore = 0;
-                let foundWords = [];
-                
-                // حساب درجة المطابقة لكل كلمة بحث
-                searchWords.forEach(word => {
-                    if (ayahText.includes(word)) {
-                        matchScore += word.length;
-                        foundWords.push(word);
-                        
-                        // زيادة الوزن إذا كانت الكلمة في بداية التفسير
-                        if (ayahText.indexOf(word) < 100) {
-                            matchScore += 10;
-                        }
+        // بحث سريع باستخدام الفهرس
+        searchWords.forEach(word => {
+            if (data.searchIndex.has(word)) {
+                data.searchIndex.get(word).forEach(item => {
+                    const key = `${item.surah}-${item.ayah}`;
+                    if (!results.has(key)) {
+                        results.set(key, {
+                            ...item,
+                            score: 0
+                        });
                     }
-                });
-                
-                if (matchScore > 0) {
-                    const ayahMatch = ayahPart.match(/^(\d+)\./);
-                    const ayahNumber = ayahMatch ? ayahMatch[1] : '1';
                     
-                    // استخراج مقتطف يحتوي على كلمات البحث
-                    const cleanAyahText = ayahPart.replace(/^\d+\.\s*/, '').trim();
-                    const snippet = extractSnippet(cleanAyahText, searchWords, 8);
+                    // تحديث النقاط
+                    const result = results.get(key);
+                    result.score += word.length;
                     
-                    results.push({
-                        q: `${surah.q} آية ${ayahNumber}`,
-                        a: ayahPart.trim(),
-                        surah: surah.q,
-                        ayah: parseInt(ayahNumber),
-                        score: matchScore,
-                        matchedText: ayahPart.trim(),
-                        snippet: snippet,
-                        searchWords: foundWords
-                    });
-                }
-            });
-        });
-
-        // ترتيب النتائج حسب درجة المطابقة
-        return results.sort((a, b) => b.score - a.score).slice(0, 8);
-    }
-
-    // ======== تحديث المقترحات مع البحث النصي المتقدم والمقتطفات ========
-    function updateSuggestions(value) {
-        suggestionsDiv.innerHTML = '';
-        selectedIndex = 0;
-
-        if (!value.trim()) {
-            suggestionsDiv.style.display = 'none';
-            return;
-        }
-
-        let filtered = [];
-
-        // البحث التقليدي في الأسئلة أولاً
-        const traditionalResults = getAllSuggestions().filter(item =>
-            item.q.toLowerCase().includes(value.toLowerCase())
-        ).slice(0, 6);
-
-        filtered.push(...traditionalResults);
-
-        // البحث النصي في المحتوى مع المقتطفات
-        const textSearchResults = searchInAllAnswers(value);
-        textSearchResults.forEach(result => {
-            if (!filtered.some(item => item.q === result.q)) {
-                filtered.push({
-                    ...result,
-                    isTextSearch: true
+                    // نقاط إضافية إذا كانت الكلمة في بداية النص
+                    if (item.a.toLowerCase().indexOf(word) < 100) {
+                        result.score += 5;
+                    }
                 });
             }
         });
 
-        // إزالة التكرارات والحد إلى 10 نتائج
-        filtered = filtered.slice(0, 10);
+        const finalResults = Array.from(results.values())
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 6)
+            .map(result => ({
+                ...result,
+                snippet: extractSnippetFast(result.a.replace(/^\d+\.\s*/, ''), searchWords, 8)
+            }));
 
-        if (filtered.length === 0) {
-            const noResult = document.createElement('div');
-            noResult.textContent = "لا توجد نتائج...";
-            noResult.className = "no";
-            suggestionsDiv.appendChild(noResult);
-        } else {
-            filtered.forEach((item, index) => {
-                const suggestionItem = document.createElement('div');
-                suggestionItem.classList.add('suggestion-item');
-                
-                const btn = document.createElement('button');
-                btn.classList.add('suggestion-btn');
-                
-                // إذا كان عنصر بحث نصي، أضف المقتطف
-                if (item.isTextSearch || item.snippet) {
-                    const title = document.createElement('div');
-                    title.textContent = item.q;
-                    title.style.fontWeight = 'bold';
-                    title.style.marginBottom = '4px';
-                    title.style.textAlign = 'right';
-                    
-                    const snippet = document.createElement('div');
-                    snippet.textContent = item.snippet || extractSnippet(item.a.replace(/^\d+\.\s*/, ''), value.toLowerCase().split(/\s+/), 8);
-                    snippet.style.fontSize = '0.85em';
-                    snippet.style.color = '#666';
-                    snippet.style.marginBottom = '4px';
-                    snippet.style.lineHeight = '1.3';
-                    snippet.style.textAlign = 'right';
-                    
-                    const source = document.createElement('div');
-                    source.textContent = `${item.surah.replace('تفسير ', '')} - آية ${item.ayah}`;
-                    source.style.fontSize = '0.8em';
-                    source.style.color = '#888';
-                    source.style.fontStyle = 'italic';
-                    source.style.textAlign = 'right';
-                    
-                    btn.appendChild(title);
-                    btn.appendChild(snippet);
-                    btn.appendChild(source);
-                } else {
-                    // عناصر البحث التقليدية
-                    btn.textContent = item.q;
-                    btn.style.textAlign = 'right';
+        // حفظ في الكاش
+        searchCache.set(searchText, finalResults);
+        return finalResults;
+    }
+
+    // ======== تحديث المقترحات - محسن للأداء ========
+    function updateSuggestions(value) {
+        clearTimeout(debounceTimer);
+        
+        debounceTimer = setTimeout(() => {
+            suggestionsDiv.innerHTML = '';
+            selectedIndex = 0;
+
+            if (!value.trim()) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+
+            let filtered = [];
+
+            // البحث التقليدي السريع في الأسئلة
+            const traditionalResults = [];
+            const searchLower = value.toLowerCase();
+            
+            for (let i = 0; i < faq.length && traditionalResults.length < 3; i++) {
+                if (faq[i].q.toLowerCase().includes(searchLower)) {
+                    traditionalResults.push(faq[i]);
                 }
-                
-                if (index === 0) {
-                    btn.style.backgroundColor = "#dbeafe";
+            }
+            
+            for (let i = 0; i < dynamicSuggestions.length && traditionalResults.length < 6; i++) {
+                if (dynamicSuggestions[i].q.toLowerCase().includes(searchLower)) {
+                    traditionalResults.push(dynamicSuggestions[i]);
                 }
-                
-                btn.addEventListener('click', () => {
-                    searchInput.value = item.q;
-                    handleQuestion(item);
+            }
+
+            filtered.push(...traditionalResults.slice(0, 4));
+
+            // البحث النصي السريع إذا لم تكن هناك نتائج كافية
+            if (filtered.length < 5) {
+                const textSearchResults = searchInAllAnswersFast(value);
+                textSearchResults.forEach(result => {
+                    if (!filtered.some(item => item.q === result.q)) {
+                        filtered.push({
+                            ...result,
+                            isTextSearch: true
+                        });
+                    }
                 });
-                
-                suggestionItem.appendChild(btn);
-                suggestionsDiv.appendChild(suggestionItem);
-            });
-        }
+            }
 
-        suggestionsDiv.style.display = filtered.length > 0 ? 'block' : 'none';
+            // إزالة التكرارات والحد إلى 8 نتائج
+            filtered = filtered.slice(0, 8);
+
+            if (filtered.length === 0) {
+                const noResult = document.createElement('div');
+                noResult.textContent = "لا توجد نتائج...";
+                noResult.className = "no";
+                suggestionsDiv.appendChild(noResult);
+            } else {
+                filtered.forEach((item, index) => {
+                    const suggestionItem = document.createElement('div');
+                    suggestionItem.classList.add('suggestion-item');
+                    
+                    const btn = document.createElement('button');
+                    btn.classList.add('suggestion-btn');
+                    
+                    if (item.isTextSearch || item.snippet) {
+                        const title = document.createElement('div');
+                        title.textContent = item.q;
+                        title.style.fontWeight = 'bold';
+                        title.style.marginBottom = '4px';
+                        title.style.textAlign = 'right';
+                        
+                        const snippet = document.createElement('div');
+                        snippet.textContent = item.snippet || extractSnippetFast(item.a.replace(/^\d+\.\s*/, ''), value.toLowerCase().split(/\s+/), 8);
+                        snippet.style.fontSize = '0.85em';
+                        snippet.style.color = '#666';
+                        snippet.style.marginBottom = '4px';
+                        snippet.style.lineHeight = '1.3';
+                        snippet.style.textAlign = 'right';
+                        
+                        const source = document.createElement('div');
+                        source.textContent = `${item.surah.replace('تفسير ', '')} - آية ${item.ayah}`;
+                        source.style.fontSize = '0.8em';
+                        source.style.color = '#888';
+                        source.style.fontStyle = 'italic';
+                        source.style.textAlign = 'right';
+                        
+                        btn.appendChild(title);
+                        btn.appendChild(snippet);
+                        btn.appendChild(source);
+                    } else {
+                        btn.textContent = item.q;
+                        btn.style.textAlign = 'right';
+                    }
+                    
+                    if (index === 0) {
+                        btn.style.backgroundColor = "#dbeafe";
+                    }
+                    
+                    btn.addEventListener('click', () => {
+                        searchInput.value = item.q;
+                        handleQuestion(item);
+                    });
+                    
+                    suggestionItem.appendChild(btn);
+                    suggestionsDiv.appendChild(suggestionItem);
+                });
+            }
+
+            suggestionsDiv.style.display = filtered.length > 0 ? 'block' : 'none';
+        }, 150); // تأخير 150 مللي ثانية
     }
 
     // ======== تحديث خلفية الأزرار المختارة ========
@@ -374,7 +405,6 @@ window.onload = () => {
             btn.style.backgroundColor = i === selectedIndex ? "#dbeafe" : "#f1f5f9";
         });
         
-        // تحديث خانة الكتابة بالاقتراح المحدد
         if (buttons.length > 0 && isNavigatingWithArrows) {
             const selectedButton = buttons[selectedIndex];
             const titleElement = selectedButton.querySelector('div:first-child');
@@ -388,7 +418,6 @@ window.onload = () => {
 
     // ======== البحث الدقيق عن تفسير آية - محسن ========
     function findAyahTafsir(userText) {
-        // أنماط متعددة للبحث عن الآيات
         const patterns = [
             /سورة\s*([\u0600-\u06FF\s]+)\s*(?:آية|اية|رقم)?\s*(\d+)/i,
             /تفسير\s*سورة\s*([\u0600-\u06FF\s]+)\s*(?:آية|اية)?\s*(\d+)/i,
@@ -400,7 +429,6 @@ window.onload = () => {
         let surahName = null;
         let ayahNumber = null;
 
-        // تجربة جميع الأنماط
         for (let pattern of patterns) {
             const match = userText.match(pattern);
             if (match) {
@@ -411,49 +439,39 @@ window.onload = () => {
         }
 
         if (surahName && ayahNumber) {
-            console.log('البحث عن:', surahName, 'آية:', ayahNumber);
-
-            // البحث عن السورة
+            // بحث سريع عن السورة
             const surahItem = faq.find(item => {
                 const itemName = item.q.replace('تفسير ', '').trim();
                 const cleanSurahName = surahName.replace('سورة', '').replace('سوره', '').trim();
-                return itemName.includes(cleanSurahName) || cleanSurahName.includes(itemName) || item.q.includes(surahName);
+                return itemName.includes(cleanSurahName) || cleanSurahName.includes(itemName);
             });
 
             if (!surahItem) {
                 return "❌ لم يتم العثور على السورة في قاعدة البيانات.";
             }
 
-            console.log('تم العثور على السورة:', surahItem.q);
-
-            // البحث في الاقتراحات الديناميكية أولاً (أكثر دقة)
+            // بحث سريع في الاقتراحات الديناميكية
             const exactMatch = dynamicSuggestions.find(suggestion => 
                 suggestion.surah === surahItem.q && suggestion.ayah === ayahNumber
             );
 
             if (exactMatch) {
-                console.log('تم العثور على الآية في الاقتراحات الديناميكية');
                 return exactMatch.a;
             }
 
-            // إذا لم يتم العثور في الاقتراحات، البحث في النص الأصلي باستخدام regex محسن
-            console.log('البحث في النص الأصلي للسورة...');
-            
-            // regex محسن لجلب النص الكامل للآية من بداية الرقم إلى الرقم التالي
+            // بحث في النص الأصلي
             const ayahRegex = new RegExp(`(${ayahNumber}\\.\\s*[^]*?)(?=\\d+\\.|$)`, 'g');
             const ayahMatch = surahItem.a.match(ayahRegex);
             
             if (ayahMatch && ayahMatch[0]) {
-                console.log('تم العثور على الآية في النص الأصلي باستخدام regex محسن');
                 return ayahMatch[0].trim();
             }
 
             return `❌ لم يتم العثور على تفسير الآية ${ayahNumber} من ${surahItem.q}.`;
         }
 
-        // إذا لم يكن البحث عن آية محددة، البحث النصي في المحتوى
-        console.log('البحث النصي عن:', userText);
-        const textSearchResults = searchInAllAnswers(userText);
+        // البحث النصي السريع
+        const textSearchResults = searchInAllAnswersFast(userText);
         
         if (textSearchResults.length > 0) {
             let resultText = `🔍 نتائج البحث عن: "${userText}"\n\n`;
@@ -467,25 +485,6 @@ window.onload = () => {
         }
 
         return null;
-    }
-
-    // ======== دالة مساعدة لاستخراج جميع آيات السورة ========
-    function getAllAyahsForSurah(surahName) {
-        const surahItem = faq.find(item => {
-            const itemName = item.q.replace('تفسير ', '').trim();
-            return itemName.includes(surahName) || surahName.includes(itemName);
-        });
-
-        if (!surahItem) return [];
-
-        const ayahMatches = surahItem.a.match(/\d+\.\s*[^]*?(?=\d+\.|$)/g) || [];
-        return ayahMatches.map(part => {
-            const match = part.match(/^(\d+)\./);
-            return {
-                number: match ? parseInt(match[1]) : 0,
-                text: part.trim()
-            };
-        }).filter(ayah => ayah.number > 0);
     }
 
     // ======== معالجة السؤال ========
