@@ -3,8 +3,9 @@ window.onload = () => {
     const searchInput = document.getElementById('searchInput');
     const suggestionsDiv = document.getElementById('suggestions');
     const newChatBtn = document.getElementById('newChatBtn');
-    const shareBtn = document.getElementById('shareBtn'); // زر المشاركة الجديد
+    const shareBtn = document.getElementById('shareBtn');
     let selectedIndex = 0;
+    let isNavigatingWithArrows = false;
 
     // ======== زر مشاركة الرابط ========
     shareBtn.addEventListener('click', async () => {
@@ -12,18 +13,15 @@ window.onload = () => {
         
         try {
             if (navigator.share) {
-                // إذا كان المتصفح يدعم Web Share API
                 await navigator.share({
                     title: 'تفسير القرآن الكريم',
                     text: 'استمع إلى تفسير القرآن الكريم',
                     url: currentUrl
                 });
             } else if (navigator.clipboard) {
-                // نسخ الرابط إلى الحافظة
                 await navigator.clipboard.writeText(currentUrl);
                 alert('✓ تم نسخ الرابط إلى الحافظة');
             } else {
-                // طريقة بديلة للنسخ
                 const textArea = document.createElement('textarea');
                 textArea.value = currentUrl;
                 document.body.appendChild(textArea);
@@ -34,7 +32,6 @@ window.onload = () => {
             }
         } catch (error) {
             console.error('Error sharing:', error);
-            // طريقة احتياطية
             const textArea = document.createElement('textarea');
             textArea.value = currentUrl;
             document.body.appendChild(textArea);
@@ -48,19 +45,35 @@ window.onload = () => {
     // ======== توليد اقتراحات ديناميكية لكل سورة وآياتها ========
     let dynamicSuggestions = [];
 
-    faq.forEach(item => {
-        const ayahParts = item.a.split(/(?=\d+\.\s*)/g);
-        ayahParts.forEach(part => {
-            const match = part.match(/^(\d+)\./);
-            if (match) {
-                const ayahNum = match[1];
-                dynamicSuggestions.push({
-                    q: `${item.q} آية ${ayahNum}`,
-                    a: part
+    // دالة محسنة لتقسيم الآيات - تضمن جلب النص الكامل للآية
+    function generateAyahSuggestions() {
+        dynamicSuggestions = [];
+        
+        faq.forEach(item => {
+            // تقسيم النص إلى آيات باستخدام regex محسن يضمن جلب النص الكامل
+            const ayahMatches = item.a.match(/\d+\.\s*[^]*?(?=\d+\.|$)/g);
+            
+            if (ayahMatches) {
+                ayahMatches.forEach(part => {
+                    const match = part.match(/^(\d+)\./);
+                    if (match) {
+                        const ayahNum = match[1];
+                        dynamicSuggestions.push({
+                            q: `${item.q} آية ${ayahNum}`,
+                            a: part.trim(),
+                            surah: item.q,
+                            ayah: parseInt(ayahNum)
+                        });
+                    }
                 });
             }
         });
-    });
+        
+        console.log('تم توليد اقتراحات لـ:', dynamicSuggestions.length, 'آية');
+    }
+
+    // توليد الاقتراحات عند التحميل
+    generateAyahSuggestions();
 
     // دمج الاقتراحات الديناميكية مع الاقتراحات الأصلية
     function getAllSuggestions() {
@@ -181,8 +194,13 @@ window.onload = () => {
                 const btn = document.createElement('button');
                 btn.textContent = item.q;
                 btn.classList.add('suggestion-btn');
-                btn.style.backgroundColor = index === 0 ? "#dbeafe" : "#f1f5f9";
-                btn.addEventListener('click', () => handleQuestion(item));
+                if (index === 0) {
+                    btn.style.backgroundColor = "#dbeafe";
+                }
+                btn.addEventListener('click', () => {
+                    searchInput.value = item.q; // تعبئة خانة الكتابة عند النقر
+                    handleQuestion(item);
+                });
                 suggestionsDiv.appendChild(btn);
             });
         }
@@ -190,28 +208,128 @@ window.onload = () => {
         suggestionsDiv.style.display = filtered.length > 0 ? 'block' : 'none';
     }
 
-    // ======== البحث الديناميكي عن تفسير آية ========
+    // ======== تحديث خلفية الأزرار المختارة ========
+    function updateSelectedSuggestion() {
+        const buttons = suggestionsDiv.querySelectorAll('.suggestion-btn');
+        buttons.forEach((btn, i) => {
+            btn.style.backgroundColor = i === selectedIndex ? "#dbeafe" : "#f1f5f9";
+        });
+        
+        // تحديث خانة الكتابة بالاقتراح المحدد
+        if (buttons.length > 0 && isNavigatingWithArrows) {
+            const selectedText = buttons[selectedIndex].textContent;
+            searchInput.value = selectedText;
+        }
+    }
+
+    // ======== البحث الدقيق عن تفسير آية - محسن ========
     function findAyahTafsir(userText) {
-        const regex = /سورة\s*([\u0600-\u06FF]+)\s*(?:آية|اية|رقم)?\s*(\d+)?/;
-        const match = userText.match(regex);
+        // أنماط متعددة للبحث
+        const patterns = [
+            /سورة\s*([\u0600-\u06FF\s]+)\s*(?:آية|اية|رقم)?\s*(\d+)/i,
+            /تفسير\s*سورة\s*([\u0600-\u06FF\s]+)\s*(?:آية|اية)?\s*(\d+)/i,
+            /سورة\s*([\u0600-\u06FF\s]+)\s*(\d+)/i,
+            /([\u0600-\u06FF\s]+)\s*(?:آية|اية)\s*(\d+)/i,
+            /سوره\s*([\u0600-\u06FF\s]+)\s*(\d+)/i
+        ];
 
-        if (!match) return null;
+        let surahName = null;
+        let ayahNumber = null;
 
-        const surahName = match[1].trim();
-        const ayahNumber = match[2] ? Number(match[2]) : null;
+        // تجربة جميع الأنماط
+        for (let pattern of patterns) {
+            const match = userText.match(pattern);
+            if (match) {
+                surahName = match[1].trim();
+                ayahNumber = parseInt(match[2]);
+                break;
+            }
+        }
 
-        const surahItem = faq.find(item => item.q.includes(surahName));
+        if (!surahName || !ayahNumber) {
+            return null;
+        }
 
-        if (!surahItem) return "❌ لم يتم العثور على السورة في قاعدة البيانات.";
+        console.log('البحث عن:', surahName, 'آية:', ayahNumber);
 
-        if (!ayahNumber) return surahItem.a;
+        // البحث عن السورة
+        const surahItem = faq.find(item => {
+            const itemName = item.q.replace('تفسير ', '').trim();
+            const cleanSurahName = surahName.replace('سورة', '').replace('سوره', '').trim();
+            return itemName.includes(cleanSurahName) || cleanSurahName.includes(itemName) || item.q.includes(surahName);
+        });
 
-        const parts = surahItem.a.split(/(?=\d+\.\s*)/g);
-        const ayahText = parts.find(p => p.startsWith(ayahNumber + "."));
+        if (!surahItem) {
+            return "❌ لم يتم العثور على السورة في قاعدة البيانات.";
+        }
 
-        if (!ayahText) return "❌ لم يتم العثور على تفسير هذه الآية.";
+        console.log('تم العثور على السورة:', surahItem.q);
 
-        return ayahText;
+        // البحث في الاقتراحات الديناميكية أولاً (أكثر دقة)
+        const exactMatch = dynamicSuggestions.find(suggestion => 
+            suggestion.surah === surahItem.q && suggestion.ayah === ayahNumber
+        );
+
+        if (exactMatch) {
+            console.log('تم العثور على الآية في الاقتراحات الديناميكية');
+            return exactMatch.a;
+        }
+
+        // إذا لم يتم العثور في الاقتراحات، البحث في النص الأصلي باستخدام regex محسن
+        console.log('البحث في النص الأصلي للسورة...');
+        
+        // regex محسن لجلب النص الكامل للآية من بداية الرقم إلى الرقم التالي
+        const ayahRegex = new RegExp(`(${ayahNumber}\\.\\s*[^]*?)(?=\\d+\\.|$)`, 'g');
+        const ayahMatch = surahItem.a.match(ayahRegex);
+        
+        if (ayahMatch && ayahMatch[0]) {
+            console.log('تم العثور على الآية في النص الأصلي باستخدام regex محسن');
+            return ayahMatch[0].trim();
+        }
+
+        // محاولة بديلة: البحث عن الآية بالتقسيم التقليدي
+        console.log('محاولة البحث بالتقسيم التقليدي...');
+        const ayahParts = surahItem.a.split(/(?=\d+\.\s*)/g);
+        const ayahText = ayahParts.find(part => {
+            const ayahMatch = part.match(/^(\d+)\./);
+            return ayahMatch && parseInt(ayahMatch[1]) === ayahNumber;
+        });
+
+        if (ayahText) {
+            console.log('تم العثور على الآية بالتقسيم التقليدي');
+            return ayahText.trim();
+        }
+
+        // محاولة أخيرة: البحث في النص مباشرة
+        console.log('محاولة البحث المباشر في النص...');
+        const directSearchPattern = new RegExp(`\\b${ayahNumber}\\.\\s*[^]*?(?=\\b\\d+\\.|$)`, 'g');
+        const directMatch = surahItem.a.match(directSearchPattern);
+        
+        if (directMatch && directMatch[0]) {
+            console.log('تم العثور على الآية بالبحث المباشر');
+            return directMatch[0].trim();
+        }
+
+        return `❌ لم يتم العثور على تفسير الآية ${ayahNumber} من ${surahItem.q}.`;
+    }
+
+    // ======== دالة مساعدة لاستخراج جميع آيات السورة ========
+    function getAllAyahsForSurah(surahName) {
+        const surahItem = faq.find(item => {
+            const itemName = item.q.replace('تفسير ', '').trim();
+            return itemName.includes(surahName) || surahName.includes(itemName);
+        });
+
+        if (!surahItem) return [];
+
+        const ayahMatches = surahItem.a.match(/\d+\.\s*[^]*?(?=\d+\.|$)/g) || [];
+        return ayahMatches.map(part => {
+            const match = part.match(/^(\d+)\./);
+            return {
+                number: match ? parseInt(match[1]) : 0,
+                text: part.trim()
+            };
+        }).filter(ayah => ayah.number > 0);
     }
 
     // ======== معالجة السؤال ========
@@ -231,7 +349,7 @@ window.onload = () => {
             addMessage(userQuestion, 'user');
 
             if (answer === null) {
-                addMessage("لم أجد تفسيراً. حاول كتابة: تفسير سورة البقرة 255", "bot");
+                addMessage("لم أجد تفسيراً. حاول كتابة: تفسير سورة البقرة آية 255", "bot");
                 return;
             }
 
@@ -281,7 +399,10 @@ window.onload = () => {
     });
 
     // ======== إدخال وأسهم ========
-    searchInput.addEventListener('input', (e) => updateSuggestions(e.target.value));
+    searchInput.addEventListener('input', (e) => {
+        isNavigatingWithArrows = false; // إعادة تعيين عند الكتابة
+        updateSuggestions(e.target.value);
+    });
 
     searchInput.addEventListener('keydown', (e) => {
         const buttons = suggestionsDiv.querySelectorAll('.suggestion-btn');
@@ -289,26 +410,50 @@ window.onload = () => {
 
         if (e.key === "ArrowDown") {
             e.preventDefault();
+            isNavigatingWithArrows = true;
             selectedIndex = (selectedIndex + 1) % buttons.length;
+            updateSelectedSuggestion();
         } else if (e.key === "ArrowUp") {
             e.preventDefault();
+            isNavigatingWithArrows = true;
             selectedIndex = (selectedIndex - 1 + buttons.length) % buttons.length;
+            updateSelectedSuggestion();
         } else if (e.key === "Enter") {
             e.preventDefault();
             if (searchInput.value.trim()) {
-                handleQuestion(searchInput.value.trim());
+                // إذا كان المستخدم يكتب، استخدم النص المكتوب
+                if (!isNavigatingWithArrows) {
+                    handleQuestion(searchInput.value.trim());
+                } else {
+                    // إذا كان يتنقل بالأسهم، استخدم الاقتراح المحدد
+                    const selectedItem = getAllSuggestions().find(item => item.q === searchInput.value);
+                    if (selectedItem) {
+                        handleQuestion(selectedItem);
+                    } else {
+                        handleQuestion(searchInput.value.trim());
+                    }
+                }
                 searchInput.value = "";
                 suggestionsDiv.innerHTML = "";
                 suggestionsDiv.style.display = "none";
+                isNavigatingWithArrows = false;
                 return;
             }
-            const selectedItem = getAllSuggestions().find(item => item.q === buttons[selectedIndex].textContent);
-            if (selectedItem) handleQuestion(selectedItem);
+        } else if (e.key === "Escape") {
+            suggestionsDiv.style.display = "none";
+            isNavigatingWithArrows = false;
+        } else {
+            // أي مفتاح آخر غير الأسهم أو Enter
+            isNavigatingWithArrows = false;
         }
+    });
 
-        buttons.forEach((btn, i) => {
-            btn.style.backgroundColor = i === selectedIndex ? "#dbeafe" : "#f1f5f9";
-        });
+    // إخفاء الاقتراحات عند النقر خارجها
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+            suggestionsDiv.style.display = 'none';
+            isNavigatingWithArrows = false;
+        }
     });
 
     // ======== تحميل عند البداية ========
