@@ -240,6 +240,7 @@ svg,ion-icon {
 }
 .suggestions {
     position: absolute;
+    user-select: none;
     z-index: 10;
     background-color: white;
     bottom: 79px;
@@ -286,10 +287,16 @@ svg,ion-icon {
     border-color: #4e54c8;
     padding-right: 15px;
 }
-.suggestions button:first-child {
-    margin-top: 50px;
+.suggestions div:first-child {
+    margin-top: 38px;
 }
-.suggestions button:last-child {
+.suggestions button div:first-child {
+    margin: 0;
+}
+.suggestions button div:last-child {
+    margin: 0;
+}
+.suggestions div:last-child {
     margin-bottom: 12px;
 }
 /* تحسين التمرير */
