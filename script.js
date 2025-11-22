@@ -9,6 +9,55 @@ window.onload = () => {
     let dynamicSuggestions = [];
     let suggestionsGenerated = false;
 
+    // ======== إنشاء زر النزول لأسفل ========
+    const scrollToBottomBtn = document.createElement('button');
+    scrollToBottomBtn.id = 'scrollToBottomBtn';
+    scrollToBottomBtn.innerHTML = '↓';
+    scrollToBottomBtn.style.cssText = `
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        z-index: 100;
+    `;
+    
+    // إضافة الزر إلى body
+    document.body.appendChild(scrollToBottomBtn);
+
+    // ======== التحكم في ظهور زر النزول لأسفل ========
+    function toggleScrollButton() {
+        const scrollBottom = messagesDiv.scrollHeight - messagesDiv.scrollTop - messagesDiv.clientHeight;
+        
+        if (scrollBottom > 100) {
+            scrollToBottomBtn.style.display = 'flex';
+        } else {
+            scrollToBottomBtn.style.display = 'none';
+        }
+    }
+
+    // ======== حدث النقر على زر النزول لأسفل ========
+    scrollToBottomBtn.addEventListener('click', () => {
+        messagesDiv.scrollTo({
+            top: messagesDiv.scrollHeight,
+            behavior: 'smooth'
+        });
+    });
+
+    // ======== مراقبة التمرير في قسم الرسائل ========
+    messagesDiv.addEventListener('scroll', toggleScrollButton);
+
     // ======== زر مشاركة الرابط ========
     shareBtn.addEventListener('click', async () => {
         const currentUrl = window.location.href;
@@ -146,6 +195,8 @@ window.onload = () => {
         if (saved) {
             messagesDiv.innerHTML = saved;
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            // التحقق من حالة زر النزول بعد التحميل
+            setTimeout(toggleScrollButton, 100);
         }
     }
 
@@ -177,9 +228,9 @@ window.onload = () => {
                 } else {
                     const imageSpan = document.createElement('span');
                     imageSpan.textContent = `(${part})`;
-                    imageSpan.style.color = '#e53e3e';
+                    imageSpan.style.color = 'rgb(120 126 232)';
                     imageSpan.style.fontWeight = 'bold';
-                    imageSpan.style.backgroundColor = '#fed7d7';
+                    imageSpan.style.backgroundColor = '#fff';
                     imageSpan.style.padding = '2px 6px';
                     imageSpan.style.borderRadius = '4px';
                     imageSpan.style.margin = '0 2px';
@@ -196,6 +247,9 @@ window.onload = () => {
         messagesDiv.appendChild(msg);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
         saveMessages();
+        
+        // التحقق من حالة زر النزول بعد إضافة الرسالة
+        setTimeout(toggleScrollButton, 100);
         return msg;
     }
 
@@ -206,6 +260,9 @@ window.onload = () => {
         indicator.innerHTML = '<span></span><span></span><span></span>';
         messagesDiv.appendChild(indicator);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        
+        // التحقق من حالة زر النزول بعد إضافة المؤشر
+        setTimeout(toggleScrollButton, 100);
         return indicator;
     }
 
@@ -253,6 +310,9 @@ window.onload = () => {
             buttonDiv.appendChild(moreBtn);
             messagesDiv.appendChild(buttonDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            // التحقق من حالة زر النزول بعد إضافة الزر
+            setTimeout(toggleScrollButton, 100);
         }
 
         addMessage(chunks[0], "bot");
