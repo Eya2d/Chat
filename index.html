@@ -52,6 +52,32 @@ svg,ion-icon {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
 }
+.scr-top {
+    position: absolute;
+    z-index: 10;
+    bottom: 88px;
+    right: 10px;
+    border: solid 1px #e2e8f0;
+    color: #7e74ff;
+    background: #ffffff;
+    width: 35px;
+    height: 35px;
+    border-radius: 29px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+.scr-top:hover {
+    background-color: #edecff;
+}
+.scr-top ion-icon {
+    height: 20px;
+    width: 20px;
+}
+#scrollToBottomBtn.show {
+    display: flex;
+    animation: bounceIn 0.5s;
+}
 .chat-header {
     background-color: #f8f9ff;
     /* background: linear-gradient(135deg, #4e54c8, #8f94fb); */
@@ -77,7 +103,7 @@ svg,ion-icon {
 .chat-header button:hover {
     background: #aca1ff42;
 }
-.chat-header .ripple {
+.chat-header .ripple, .scr-top .ripple {
     background-color: #aca1ff26;
 }
 .chat-header .fffde {
@@ -204,7 +230,6 @@ svg,ion-icon {
     position: relative;
     margin: 10px;
     border-radius: 50px;
-    overflow: hidden;
 }
 .search-box::after {
     content: "";
@@ -533,6 +558,7 @@ svg,ion-icon {
     <div class="suggestions Wave-all" id="suggestions"></div>
     <div class="search-box">
         <input type="search" id="searchInput" placeholder="اكتب سؤالك هنا..." autofocus>
+        <button class="scr-top Wave-center" id="scrollToBottomBtn"><ion-icon name="arrow-down-outline"></ion-icon></button>
     </div>
 </div>
 
