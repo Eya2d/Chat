@@ -154,6 +154,7 @@ svg,ion-icon {
     content: '';
     background-image: url(image/yo.png);
     background-size: cover;
+    filter: hue-rotate(36deg);
     right: 0;
     top: 0;
     margin: 0px -40px;
@@ -239,6 +240,7 @@ svg,ion-icon {
 }
 .suggestions {
     position: absolute;
+    user-select: none;
     z-index: 10;
     background-color: white;
     bottom: 79px;
@@ -269,7 +271,7 @@ svg,ion-icon {
     background: #f1f5f9;
     border-radius: 25px;
     text-align: right;
-    font-size: 0.95rem;
+    font-size: 0.90rem;
     color: #4a5568;
     transition: all 0.2s;
     border: 1px solid transparent;
@@ -279,16 +281,23 @@ svg,ion-icon {
     overflow: hidden;
     min-height: 43px;
     width: -webkit-fill-available;
+    font-family: sans-serif;
 }
 .suggestions button:hover {
     background: #e2e8f0;
     border-color: #4e54c8;
     padding-right: 15px;
 }
-.suggestions button:first-child {
-    margin-top: 50px;
+.suggestions div:first-child {
+    margin-top: 38px;
 }
-.suggestions button:last-child {
+.suggestions button div:first-child {
+    margin: 0;
+}
+.suggestions button div:last-child {
+    margin: 0;
+}
+.suggestions div:last-child {
     margin-bottom: 12px;
 }
 /* تحسين التمرير */
