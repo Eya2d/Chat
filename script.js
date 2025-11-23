@@ -1,4 +1,4 @@
-        window.onload = () => {
+window.onload = () => {
             const messagesDiv = document.getElementById('messages');
             const searchInput = document.getElementById('searchInput');
             const suggestionsDiv = document.getElementById('suggestions');
@@ -373,6 +373,9 @@
                             const imageParts = extractImageParts(ayahPart);
                             const searchSnippets = extractTextAroundSearch(ayahPart, searchWords, 8);
                             
+                            // استخراج النص الأساسي للآية (بدون رقم الآية)
+                            const ayahContent = ayahPart.replace(/^\d+\.\s*/, '').trim();
+                            
                             results.push({
                                 q: `${surah.q} آية ${ayahNumber}`,
                                 a: ayahPart.trim(),
@@ -382,13 +385,28 @@
                                 matchedText: ayahPart.trim(),
                                 searchWords: foundWords,
                                 imageParts: imageParts,
-                                searchSnippets: searchSnippets
+                                searchSnippets: searchSnippets,
+                                ayahContent: ayahContent // إضافة النص الأساسي للكشف عن التكرار
                             });
                         }
                     });
                 });
 
-                return results.sort((a, b) => b.score - a.score).slice(0, 6);
+                // تصفية النتائج المكررة بناءً على محتوى الآية
+                const uniqueResults = [];
+                const seenContents = new Set();
+                
+                results.sort((a, b) => b.score - a.score).forEach(result => {
+                    // إنشاء مفتوح فريد بناءً على السورة والآية والمحتوى الأساسي
+                    const contentKey = `${result.surah}-${result.ayah}-${result.ayahContent.substring(0, 50)}`;
+                    
+                    if (!seenContents.has(contentKey)) {
+                        seenContents.add(contentKey);
+                        uniqueResults.push(result);
+                    }
+                });
+
+                return uniqueResults.slice(0, 6);
             }
 
             // ======== تحديث المقترحات مع البحث النصي المتقدم والمقتطفات ========
@@ -412,8 +430,16 @@
 
                 // البحث النصي في المحتوى مع المقتطفات
                 const textSearchResults = searchInAllAnswers(value);
+                
+                // إضافة النتائج النصية مع تجنب التكرار
                 textSearchResults.forEach(result => {
-                    if (!filtered.some(item => item.q === result.q)) {
+                    // التحقق من عدم وجود نتيجة مكررة بناءً على نص الآية
+                    const isDuplicate = filtered.some(item => 
+                        item.q === result.q || 
+                        (item.a && result.a && item.a.substring(0, 100) === result.a.substring(0, 100))
+                    );
+                    
+                    if (!isDuplicate) {
                         filtered.push({
                             ...result,
                             isTextSearch: true
@@ -422,7 +448,14 @@
                 });
 
                 // إزالة التكرارات والحد إلى 6 نتائج فقط
-                filtered = filtered.slice(0, 6);
+                const seenTitles = new Set();
+                filtered = filtered.filter(item => {
+                    if (seenTitles.has(item.q)) {
+                        return false;
+                    }
+                    seenTitles.add(item.q);
+                    return true;
+                }).slice(0, 6);
 
                 if (filtered.length === 0) {
                     const noResult = document.createElement('div');
@@ -446,7 +479,19 @@
                             title.style.color = '#1a365d';
                             
                             if (item.searchSnippets && item.searchSnippets.length > 0) {
-                                item.searchSnippets.forEach((snippet, snippetIndex) => {
+                                // عرض المقتطفات الفريدة فقط
+                                const uniqueSnippets = [];
+                                const seenSnippets = new Set();
+                                
+                                item.searchSnippets.forEach(snippet => {
+                                    const normalizedSnippet = snippet.substring(0, 80); // تقليل طول المقتطف للكشف عن التكرار
+                                    if (!seenSnippets.has(normalizedSnippet)) {
+                                        seenSnippets.add(normalizedSnippet);
+                                        uniqueSnippets.push(snippet);
+                                    }
+                                });
+                                
+                                uniqueSnippets.slice(0, 2).forEach((snippet, snippetIndex) => {
                                     const snippetDiv = document.createElement('div');
                                     snippetDiv.style.fontSize = '0.8em';
                                     snippetDiv.style.color = '#2d3748';
@@ -606,17 +651,31 @@
                 if (textSearchResults.length > 0) {
                     let resultText = `🔍 نتائج البحث عن: "${userText}"\n\n`;
                     
+                    // استخدام Set لمنع تكرار النتائج
+                    const seenResults = new Set();
+                    
                     textSearchResults.forEach((result, index) => {
-                        resultText += `${index + 1}. ${result.q}:\n`;
+                        // إنشاء مفتاح فريد للنتيجة
+                        const resultKey = `${result.surah}-${result.ayah}-${result.matchedText.substring(0, 50)}`;
                         
-                        if (result.searchSnippets && result.searchSnippets.length > 0) {
-                            result.searchSnippets.forEach(snippet => {
-                                resultText += `   • ${snippet}\n`;
-                            });
-                        } else {
-                            resultText += `${result.matchedText}\n`;
+                        if (!seenResults.has(resultKey)) {
+                            seenResults.add(resultKey);
+                            resultText += `${index + 1}. ${result.q}:\n`;
+                            
+                            if (result.searchSnippets && result.searchSnippets.length > 0) {
+                                const uniqueSnippets = new Set();
+                                result.searchSnippets.forEach(snippet => {
+                                    const normalizedSnippet = snippet.substring(0, 80);
+                                    if (!uniqueSnippets.has(normalizedSnippet)) {
+                                        uniqueSnippets.add(normalizedSnippet);
+                                        resultText += `   • ${snippet}\n`;
+                                    }
+                                });
+                            } else {
+                                resultText += `${result.matchedText}\n`;
+                            }
+                            resultText += `\n`;
                         }
-                        resultText += `\n`;
                     });
                     
                     return resultText;
