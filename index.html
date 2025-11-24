@@ -2,10 +2,9 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, height=device-height">
     <title>تفسير القرآن الكريم</title>
     <link rel="icon" href="image/logo.png">
-
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/Eya2d/Wave-cloud/wave-cloud.js"></script>
@@ -549,7 +548,6 @@ svg,ion-icon {
     </style>
 </head>
 <body>
-
 <div class="chat-container">
     <div class="chat-header Wave-all-center">
         <div class="fffde">
@@ -569,20 +567,67 @@ svg,ion-icon {
         <button class="scr-top Wave-center" id="scrollToBottomBtn"><ion-icon name="arrow-down-outline"></ion-icon></button>
     </div>
 </div>
+<script>
+// Handle viewport height changes when keyboard appears/disappears
+const handleViewportChange = () => {
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+    
+    // Adjust messages container height
+    const messagesContainer = document.querySelector('.messages');
+    if (messagesContainer) {
+        const headerHeight = document.querySelector('.chat-header').offsetHeight;
+        const searchBoxHeight = document.querySelector('.search-box').offsetHeight;
+        const totalHeight = window.innerHeight;
+        
+        messagesContainer.style.height = `${totalHeight - headerHeight - searchBoxHeight}px`;
+    }
+};
 
+// Initial setup
+handleViewportChange();
+
+// Listen for resize events
+window.addEventListener('resize', handleViewportChange);
+
+// Listen for orientation changes
+window.addEventListener('orientationchange', handleViewportChange);
+
+// Listen for focus/blur events on input
+const searchInput = document.getElementById('searchInput');
+if (searchInput) {
+    searchInput.addEventListener('focus', () => {
+        // Small delay to ensure keyboard has appeared
+        setTimeout(handleViewportChange, 300);
+    });
+    
+    searchInput.addEventListener('blur', () => {
+        // Small delay to ensure keyboard has disappeared
+        setTimeout(handleViewportChange, 300);
+    });
+}
+
+// Scroll to bottom button functionality
+const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
+const messages = document.getElementById('messages');
+
+if (scrollToBottomBtn && messages) {
+    // Show/hide button based on scroll position
+    messages.addEventListener('scroll', () => {
+        if (messages.scrollTop < messages.scrollHeight - messages.clientHeight - 100) {
+            scrollToBottomBtn.classList.add('show');
+        } else {
+            scrollToBottomBtn.classList.remove('show');
+        }
+    });
+    
+    // Scroll to bottom when button is clicked
+    scrollToBottomBtn.addEventListener('click', () => {
+        messages.scrollTop = messages.scrollHeight;
+    });
+}
+</script>
 <script src="script.js"></script>
 <script src="data.js"></script>
-
-<!-- 
-
-        Wave-cloud لإظهار الموجة من مكان النقر
-
-        Wave-center  لإظهار الموجه من المنتصف
-
-        Wave-all  لإظهار الموجة من مكان النقر لعدة عناصر كلاس أضف للديف الرئيسي
-
-        Wave-all-center اضف للديف الرئيسي لإظهار الموجة من المنتصف لعدة عناصر كلاس
-
-    -->
 </body>
 </html>
