@@ -345,10 +345,16 @@ svg,ion-icon {
         max-width: 100%;
     }
     .chat-header {
+        position: sticky;
+        top: 0;
         font-size: 1.1rem;
     }
     body button,a {
         cursor: context-menu;
+    }
+    body .search-box {
+        position: sticky;
+        bottom: 0;
     }
 }
 
@@ -521,7 +527,7 @@ svg,ion-icon {
     }
     
     .chat-container {
-        position: sticky;
+        position: fixed;
         top: 0;
         bottom: 0;
         height: 100%;
