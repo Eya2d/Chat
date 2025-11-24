@@ -2,9 +2,10 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, height=device-height">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تفسير القرآن الكريم</title>
     <link rel="icon" href="image/logo.png">
+
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/Eya2d/Wave-cloud/wave-cloud.js"></script>
@@ -17,13 +18,13 @@
 body {
     font-family: 'Cairo', sans-serif;
     background: #dee7ff;
+    overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
     height: 100vh;
-    padding: 0;
-    position: relative;
+    padding: 20px;
 }
 button {
     cursor: pointer;
@@ -46,8 +47,6 @@ svg,ion-icon {
     display: flex;
     flex-direction: column;
     animation: fadeIn 0.5s ease-out;
-    height: 100vh;
-    max-height: 100vh;
 }
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
@@ -81,20 +80,13 @@ svg,ion-icon {
 }
 .chat-header {
     background-color: #f8f9ff;
+    /* background: linear-gradient(135deg, #4e54c8, #8f94fb); */
     color: white;
     padding: 16px;
     font-weight: 700;
     font-size: 1.2rem;
     position: relative;
     overflow: hidden;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 100;
-    width: 100%;
-    max-width: 420px;
-    margin: 0 auto;
 }
 .chat-header button {
     fill: #767ce8;
@@ -143,17 +135,17 @@ svg,ion-icon {
 .fffde-img a img {
     height: 100%;
 }
+
+
 .messages {
     flex: 1;
     padding: 15px;
     overflow-y: auto;
+    min-height: 60vh;
+    max-height: 60vh;
     background: #f8f9ff;
-    padding-top: 80px; /* Space for fixed header */
-    padding-bottom: 90px; /* Space for fixed input */
-    margin-top: 0;
-    margin-bottom: 0;
-    height: calc(100vh - 170px); /* Adjust based on header and input height */
 }
+
 .message {
     user-select: none;
     font-size: 14px;
@@ -167,6 +159,10 @@ svg,ion-icon {
     position: relative;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+/* .message:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+} */
 @keyframes slideIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -231,23 +227,15 @@ svg,ion-icon {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 100;
-    background: #f8f9ff;
-    border-top: 1px solid #e2e8f0;
-    padding: 10px;
-    width: 100%;
-    max-width: 420px;
-    margin: 0 auto;
-    border-radius: 20px 20px 0 0;
+    position: relative;
+    margin: 10px;
+    border-radius: 50px;
 }
 .search-box::after {
     content: "";
     position: absolute;
     bottom: 0;
+    /* left: 0; */
     width: -webkit-fill-available;
     border-radius: 5px;
     margin: auto 27px;
@@ -276,7 +264,7 @@ svg,ion-icon {
     transform: translateY(-2px);
 }
 .suggestions {
-    position: fixed;
+    position: absolute;
     user-select: none;
     z-index: 10;
     background-color: white;
@@ -293,9 +281,6 @@ svg,ion-icon {
     border-radius: 20px;
     margin: 0 10px;
     width: -webkit-fill-available;
-    max-width: 400px;
-    left: 50%;
-    transform: translateX(-50%);
 }
 .suggestions::after {
     position: absolute;
@@ -356,28 +341,17 @@ svg,ion-icon {
 }
 @media (max-width: 480px) {
     .chat-container {
-        border-radius: 0;
+        border-radius: 15px;
         max-width: 100%;
-        height: 100vh;
-        max-height: 100vh;
     }
     .chat-header {
         font-size: 1.1rem;
-        max-width: 100%;
-        border-radius: 0;
-    }
-    .search-box {
-        max-width: 100%;
-        border-radius: 20px 20px 0 0;
-    }
-    .suggestions {
-        max-width: 100%;
-        border-radius: 20px 20px 0 0;
     }
     body button,a {
         cursor: context-menu;
     }
 }
+
 /* أنماط إضافية */
 .typing-indicator {
     display: none;
@@ -392,9 +366,11 @@ svg,ion-icon {
     margin-right: auto;
     border-bottom-left-radius: 4px;
 }
+
 .typing-indicator.active {
     display: flex;
 }
+
 .typing-indicator span {
     height: 8px;
     width: 8px;
@@ -404,12 +380,15 @@ svg,ion-icon {
     margin: 0 2px;
     animation: typing 1.4s infinite;
 }
+
 .typing-indicator span:nth-child(2) {
     animation-delay: 0.2s;
 }
+
 .typing-indicator span:nth-child(3) {
     animation-delay: 0.4s;
 }
+
 @keyframes typing {
     0%, 60%, 100% {
         transform: translateY(0);
@@ -420,6 +399,7 @@ svg,ion-icon {
         opacity: 1;
     }
 }
+
 .chat-header::after {
     content: "";
     position: absolute;
@@ -451,6 +431,9 @@ svg,ion-icon {
     background: #757bff;
     color: white;
 }
+
+
+
 @keyframes shine {
     0% {
         transform: translateX(-100%) translateY(-100%) rotate(45deg);
@@ -459,16 +442,64 @@ svg,ion-icon {
         transform: translateX(100%) translateY(100%) rotate(45deg);
     }
 }
+
+/* تحسينات للوضع الليلي
+@media (prefers-color-scheme: dark) {
+    body {
+        background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    }
+    
+    .chat-container {
+        background: #2d3748;
+        color: #e2e8f0;
+    }
+    
+    .messages {
+        background: #1a202c;
+    }
+    
+    .message.bot {
+        background: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    .search-box {
+        background: #2d3748;
+        border-top-color: #4a5568;
+    }
+    
+    .search-box input {
+        background: #4a5568;
+        color: #e2e8f0;
+        border-color: #718096;
+    }
+    
+    .suggestions {
+        background: #2d3748;
+    }
+    
+    .suggestions button {
+        background: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    .suggestions button:hover {
+        background: #718096;
+    }
+} */
+
 /* تحسينات للوصولية */
 .search-box input:focus,
 .suggestions button:focus {
     outline-color: #4e54c8;
     outline-offset: 2px;
 }
+
 /* تأثيرات للرسائل الجديدة */
 .message.new {
     animation: messageSlideIn 0.5s ease-out;
 }
+
 @keyframes messageSlideIn {
     from {
         opacity: 0;
@@ -479,6 +510,7 @@ svg,ion-icon {
         transform: translateY(0) scale(1);
     }
 }
+
 /* تحسينات للأجهزة المحمولة */
 @media (max-width: 480px) {
     body {
@@ -487,37 +519,37 @@ svg,ion-icon {
     .message {
         max-width: 85%;
     }
-   
+    
     .chat-container {
-        position: relative;
+        position: sticky;
         top: 0;
         bottom: 0;
-        height: 100vh;
+        height: 100%;
         border-radius: 0;
     }
-   
+    
     .messages {
-        height: calc(100vh - 170px);
-        padding: 15px;
-        padding-top: 80px;
-        padding-bottom: 90px;
-        margin: 0;
+        max-height: 100%;
+        min-height: auto;
+        margin: 0 7px;
+        scrollbar-width: none;
     }
     body .message.user {
         margin-top: 20px;
     }
     body .suggestions {
-        position: fixed;
+        position: relative;
         z-index: 20;
-        bottom: 79px;
-        border-radius: 20px 20px 0 0;
-        background-color: white;
-        box-shadow: 0px -3px 7px #00000014, 0px 1px 2px #00000008;
+        bottom: 0;
+        border-radius: 0;
+        background-color: #0000;
+        box-shadow: 0px -1px 0px #00000014;
     }
 }
     </style>
 </head>
 <body>
+
 <div class="chat-container">
     <div class="chat-header Wave-all-center">
         <div class="fffde">
@@ -537,67 +569,56 @@ svg,ion-icon {
         <button class="scr-top Wave-center" id="scrollToBottomBtn"><ion-icon name="arrow-down-outline"></ion-icon></button>
     </div>
 </div>
-<script>
-// Handle viewport height changes when keyboard appears/disappears
-const handleViewportChange = () => {
-    const vh = window.innerHeight * 0.01;
-    document.documentElement.style.setProperty('--vh', `${vh}px`);
-    
-    // Adjust messages container height
-    const messagesContainer = document.querySelector('.messages');
-    if (messagesContainer) {
-        const headerHeight = document.querySelector('.chat-header').offsetHeight;
-        const searchBoxHeight = document.querySelector('.search-box').offsetHeight;
-        const totalHeight = window.innerHeight;
-        
-        messagesContainer.style.height = `${totalHeight - headerHeight - searchBoxHeight}px`;
-    }
-};
 
-// Initial setup
-handleViewportChange();
-
-// Listen for resize events
-window.addEventListener('resize', handleViewportChange);
-
-// Listen for orientation changes
-window.addEventListener('orientationchange', handleViewportChange);
-
-// Listen for focus/blur events on input
-const searchInput = document.getElementById('searchInput');
-if (searchInput) {
-    searchInput.addEventListener('focus', () => {
-        // Small delay to ensure keyboard has appeared
-        setTimeout(handleViewportChange, 300);
-    });
-    
-    searchInput.addEventListener('blur', () => {
-        // Small delay to ensure keyboard has disappeared
-        setTimeout(handleViewportChange, 300);
-    });
-}
-
-// Scroll to bottom button functionality
-const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
-const messages = document.getElementById('messages');
-
-if (scrollToBottomBtn && messages) {
-    // Show/hide button based on scroll position
-    messages.addEventListener('scroll', () => {
-        if (messages.scrollTop < messages.scrollHeight - messages.clientHeight - 100) {
-            scrollToBottomBtn.classList.add('show');
-        } else {
-            scrollToBottomBtn.classList.remove('show');
-        }
-    });
-    
-    // Scroll to bottom when button is clicked
-    scrollToBottomBtn.addEventListener('click', () => {
-        messages.scrollTop = messages.scrollHeight;
-    });
-}
-</script>
 <script src="script.js"></script>
 <script src="data.js"></script>
+
+<!-- 
+
+        Wave-cloud لإظهار الموجة من مكان النقر
+
+        Wave-center  لإظهار الموجه من المنتصف
+
+        Wave-all  لإظهار الموجة من مكان النقر لعدة عناصر كلاس أضف للديف الرئيسي
+
+        Wave-all-center اضف للديف الرئيسي لإظهار الموجة من المنتصف لعدة عناصر كلاس
+
+    -->
+
+    <script>
+const chatContainer = document.querySelector(".chat-container");
+const messages = document.querySelector(".messages");
+const input = document.getElementById("searchInput");
+
+// الكود يعمل فقط على الهاتف
+let originalHeight = window.innerHeight;
+
+window.addEventListener("resize", () => {
+    const newHeight = window.innerHeight;
+
+    // عند ظهور الكيبورد
+    if (newHeight < originalHeight - 150) {
+        document.body.style.height = newHeight + "px";
+        document.body.style.overflow = "hidden";
+
+        messages.style.maxHeight = (newHeight - 180) + "px";
+        messages.style.minHeight = (newHeight - 180) + "px";
+    }
+
+    // عند إغلاق الكيبورد
+    else {
+        document.body.style.height = "100vh";
+        messages.style.maxHeight = "60vh";
+        messages.style.minHeight = "60vh";
+    }
+});
+
+// التمرير للأسفل عند الضغط على حقل الكتابة
+input.addEventListener("focus", () => {
+    setTimeout(() => {
+        messages.scrollTop = messages.scrollHeight;
+    }, 200);
+});
+</script>
 </body>
 </html>
