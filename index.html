@@ -407,12 +407,7 @@ svg,ion-icon {
     left: -50%;
     width: 200%;
     height: 200%;
-    background: linear-gradient(
-        45deg,
-        transparent,
-        rgba(255, 255, 255, 0.1),
-        transparent
-    );
+    background: linear-gradient(45deg, #d6baff30, rgba(255, 255, 255, 0.1), transparent);
     transform: rotate(45deg);
     animation: shine 3s infinite;
 }
@@ -584,41 +579,5 @@ svg,ion-icon {
         Wave-all-center اضف للديف الرئيسي لإظهار الموجة من المنتصف لعدة عناصر كلاس
 
     -->
-
-    <script>
-const chatContainer = document.querySelector(".chat-container");
-const messages = document.querySelector(".messages");
-const input = document.getElementById("searchInput");
-
-// الكود يعمل فقط على الهاتف
-let originalHeight = window.innerHeight;
-
-window.addEventListener("resize", () => {
-    const newHeight = window.innerHeight;
-
-    // عند ظهور الكيبورد
-    if (newHeight < originalHeight - 150) {
-        document.body.style.height = newHeight + "px";
-        document.body.style.overflow = "hidden";
-
-        messages.style.maxHeight = (newHeight - 180) + "px";
-        messages.style.minHeight = (newHeight - 180) + "px";
-    }
-
-    // عند إغلاق الكيبورد
-    else {
-        document.body.style.height = "100vh";
-        messages.style.maxHeight = "60vh";
-        messages.style.minHeight = "60vh";
-    }
-});
-
-// التمرير للأسفل عند الضغط على حقل الكتابة
-input.addEventListener("focus", () => {
-    setTimeout(() => {
-        messages.scrollTop = messages.scrollHeight;
-    }, 200);
-});
-</script>
 </body>
 </html>
