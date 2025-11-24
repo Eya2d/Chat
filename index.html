@@ -86,7 +86,9 @@ svg,ion-icon {
     font-weight: 700;
     font-size: 1.2rem;
     position: relative;
+    z-index: 10;
     overflow: hidden;
+    box-shadow: 0px 5px 7px #f8f9ff;
 }
 .chat-header button {
     fill: #767ce8;
@@ -105,6 +107,9 @@ svg,ion-icon {
 }
 .chat-header .ripple, .scr-top .ripple {
     background-color: #aca1ff26;
+}
+.more-btn .ripple {
+    background-color: rgba(255, 255, 255, 0.192);
 }
 .chat-header .fffde {
     position: relative;
@@ -228,6 +233,8 @@ svg,ion-icon {
     flex-direction: column;
     gap: 10px;
     position: relative;
+    z-index: 10;
+    box-shadow: 0px -15px 7px #f8f9ff;
     margin: 10px;
     border-radius: 50px;
 }
@@ -265,8 +272,8 @@ svg,ion-icon {
 }
 .suggestions {
     position: absolute;
+    z-index: 20;
     user-select: none;
-    z-index: 10;
     background-color: white;
     bottom: 79px;
     width: 100%;
@@ -418,6 +425,7 @@ svg,ion-icon {
     padding: 11.5px;
 }
 .more-btn, .full-btn {
+    transition: all 0.3s;
     margin: 0 35px;
     border: none;
     padding: 8px 15px;
@@ -425,6 +433,10 @@ svg,ion-icon {
     font-family: sans-serif;
     background: #757bff;
     color: white;
+}
+.more-btn:active {
+    transition: all 0.1s;
+    transform: scale(0.98);
 }
 
 
@@ -537,7 +549,7 @@ svg,ion-icon {
         z-index: 20;
         bottom: 0;
         border-radius: 0;
-        background-color: #0000;
+        background-color: #f8f9ff;
         box-shadow: 0px -1px 0px #00000014;
     }
 }
