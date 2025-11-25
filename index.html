@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تفسير القرآن الكريم</title>
-    <link rel="icon" href="image/logo.png">
+    <title>Quran recited AI</title>
+    <link rel="icon" href="image/icon.png">
 
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
@@ -198,13 +198,16 @@ svg,ion-icon {
     margin: 0px -40px;
     width: 35px;
     height: 35px;
-    border-radius: 25px;
+    border-radius: 12px;
     color: #667eea;
     font-size: 12px;
-    outline: 1px solid #ccc;
+    /* outline: 1px solid #ccc; */
+    box-shadow: 0px 2px 8px #e4e8ff;
+    background-color: #42aec7;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0px 2px 8px #e4e8ff;
 }
 .message.bot {
     background: #e2e8f0;
@@ -217,20 +220,26 @@ svg,ion-icon {
 .message.bot::after {
     position: absolute;
     content: '';
-    background-image: url(image/logo2.png);
+    background-image: url(image/icon.png);
     background-size: cover;
-    filter: hue-rotate(36deg);
+    /* filter: hue-rotate(36deg); */
     top: 0;
     left: 0;
     margin: 0px -40px;
     width: 35px;
     height: 35px;
-    border-radius: 25px;
-    outline: 1px solid #cccccc;
+    border-radius: 12px;
+    /* outline: 1px solid #cccccc; */
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 0 0 1.7px #fff inset;
+    box-shadow: 0px 2px 8px #e4e8ff;
+}
+.message.bot img {
+    border-radius: 10px;
+    display: block;
+    max-width: 100%;
+    margin-top: 5px;
 }
 .search-box {
     padding: 5px;
@@ -726,7 +735,7 @@ svg,ion-icon {
                 <!-- <a><img src="image/3.jpg" alt=""></a>
                 <a style="z-index: 3;"><img src="image/2.jpg" alt=""></a>
                 <a style="z-index: 5;"><img src="image/4.webp" alt=""></a> -->
-                <span>تفسير القرآن</span>
+                <span>Quran recited AI</span>
             </div>
             <div class="flex cccx">
                 <button class="button" id="openBtn" style="margin-right: 8px;"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2027 4.90036V6.43657H2.79727V4.90036H17.2027Z" fill="currentColor"></path><path d="M10.9604 13.0635V14.5997H2.79727V13.0635H10.9604Z" fill="currentColor"></path></svg></button>
