@@ -15,6 +15,11 @@
     padding: 0;
     box-sizing: border-box;
 }
+.flex {
+    display: flex;
+    align-items: center;
+    direction: ltr;
+}
 body {
     font-family: 'Cairo', sans-serif;
     background: #dee7ff;
@@ -39,7 +44,9 @@ svg,ion-icon {
     position: relative;
     transition: all 0.2s;
     width: 100%;
-    max-width: 420px;
+    height: 100%;
+    width: 580px;
+    max-width: 100%;
     background: #f8f9ff;
     border-radius: 20px;
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
@@ -90,7 +97,7 @@ svg,ion-icon {
     overflow: hidden;
     box-shadow: 0px 5px 7px #f8f9ff;
 }
-.chat-header button {
+.button {
     fill: #767ce8;
     color: #767ce8;
     background: #aca1ff26;
@@ -102,10 +109,10 @@ svg,ion-icon {
     justify-content: center;
     border-radius: 30%;
 }
-.chat-header button:hover {
+.button:hover {
     background: #aca1ff42;
 }
-.chat-header .ripple, .scr-top .ripple {
+.button .ripple, .scr-top .ripple, .menu .ripple {
     background-color: #aca1ff26;
 }
 .more-btn .ripple {
@@ -143,11 +150,10 @@ svg,ion-icon {
 
 
 .messages {
+    margin-right: 7px;
     flex: 1;
     padding: 15px;
-    overflow-y: auto;
-    min-height: 60vh;
-    max-height: 60vh;
+    overflow-y: scroll;
     background: #f8f9ff;
 }
 
@@ -173,6 +179,7 @@ svg,ion-icon {
     to { opacity: 1; transform: translateY(0); }
 }
 .message.user {
+    margin-top: 20px;
     background: #4e54c8;
     color: white;
     align-self: flex-end;
@@ -286,7 +293,7 @@ svg,ion-icon {
     scrollbar-width: none;
     box-shadow: 0px -3px 7px #00000014, 0px 1px 2px #00000008;
     border-radius: 20px;
-    margin: 0 10px;
+    margin: 0 56px;
     width: -webkit-fill-available;
 }
 .suggestions::after {
@@ -502,7 +509,8 @@ svg,ion-icon {
 
 /* تحسينات للوصولية */
 .search-box input:focus,
-.suggestions button:focus {
+.suggestions button:focus,
+.menu-div input:focus {
     outline-color: #4e54c8;
     outline-offset: 2px;
 }
@@ -510,6 +518,80 @@ svg,ion-icon {
 /* تأثيرات للرسائل الجديدة */
 .message.new {
     animation: messageSlideIn 0.5s ease-out;
+}
+
+.menu {
+    position: absolute;
+    z-index: 150;
+    left: -261px; /* مخفية */
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 261px;
+    padding: 6px 12px 10px;
+    background: white;
+    transition: left 0.3s ease;
+    box-shadow: none;
+}
+.sidebar.show {
+    left: 0;
+    box-shadow: 2px 0px 44px #51597354;
+}
+.overlay {
+    position: absolute;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    text-align: -webkit-left;
+}
+.menu-d {
+    user-select: none;
+    justify-content: space-between;
+    margin-top: 5px;
+    border-bottom: solid 1px #e0e5ed;
+    padding-bottom: 10px;
+    margin-bottom: 5px;
+}
+.menu-div {
+    flex: 1;
+    overflow-y: auto;
+    display: block;
+}
+.menu-div a, .menu-div label {
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.5s;
+    width: 100%;
+    margin-bottom: 5px;
+    display: inline-flex;
+    font-size: 14px;
+    padding: 6px 10px;
+    border-radius: 25px;
+}
+.menu-div a:hover, .menu-div label:hover {
+    transition: all 0.3s;
+    font-weight: bold;
+    user-select: none;
+    padding-right: 18px;
+    background: #d9d3ff3f;
+    color: #767ce8;
+    border-radius: 25px;
+}
+.menu-div input {
+    position: sticky;
+    direction: rtl;
+    bottom: 0;
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 30px;
+    border: 1px solid #cbd5e0;
+    font-size: 1rem;
+    transition: all 0.3s;
+    outline: solid 1px #0000;
 }
 
 
@@ -560,18 +642,6 @@ svg,ion-icon {
             margin: 4px 0;
         }
 
-        /* طبقة التعتيم */
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            z-index: 999;
-            display: none;
-        }
-
 
 
 
@@ -589,6 +659,7 @@ svg,ion-icon {
 /* تحسينات للأجهزة المحمولة */
 @media (max-width: 480px) {
     body {
+        user-select: none;
         padding: 0;
     }
     .message {
@@ -616,25 +687,43 @@ svg,ion-icon {
         position: relative;
         z-index: 20;
         bottom: 0;
+        margin: 0 10px;
         border-radius: 0;
         background-color: #f8f9ff;
         box-shadow: 0px -1px 0px #00000014;
     }
+    .menu-div a, .menu-div label {
+        cursor: context-menu;
+    }
+    body .cccx {
+        flex: auto;
+    }
 }
-    </style>
+
+.cccx {
+    flex: 1 1;
+    color: #515973;
+}
+</style>
 </head>
 <body>
 
 <div class="chat-container">
     <div class="chat-header Wave-all-center">
         <div class="fffde">
-            <button id="shareBtn"><ion-icon name="share-social-outline"></ion-icon></button>
-            <div class="fffde-img">
-                <a><img src="image/3.jpg" alt=""></a>
-                <a style="z-index: 3;"><img src="image/2.jpg" alt=""></a>
-                <a style="z-index: 5;"><img src="image/4.webp" alt=""></a>
+            <div class="flex cccx" style="justify-content: right;">
+                <button class="button" id="shareBtn"><ion-icon name="share-social-outline"></ion-icon></button>
             </div>
-            <button id="newChatBtn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 0.599609C3.91309 0.599609 0.599609 3.91309 0.599609 8C0.599609 9.13376 0.855461 10.2098 1.3125 11.1719L1.5918 11.7588L2.76562 11.2012L2.48633 10.6143C2.11034 9.82278 1.90039 8.93675 1.90039 8C1.90039 4.63106 4.63106 1.90039 8 1.90039C11.3689 1.90039 14.0996 4.63106 14.0996 8C14.0996 11.3689 11.3689 14.0996 8 14.0996C7.31041 14.0996 6.80528 14.0514 6.35742 13.9277C5.91623 13.8059 5.49768 13.6021 4.99707 13.2529C4.26492 12.7422 3.21611 12.5616 2.35156 13.1074L2.33789 13.1162L2.32422 13.126L1.58789 13.6436L2.01953 14.9297L3.0459 14.207C3.36351 14.0065 3.83838 14.0294 4.25293 14.3184C4.84547 14.7317 5.39743 15.011 6.01172 15.1807C6.61947 15.3485 7.25549 15.4004 8 15.4004C12.0869 15.4004 15.4004 12.0869 15.4004 8C15.4004 3.91309 12.0869 0.599609 8 0.599609ZM7.34473 4.93945V7.34961H4.93945V8.65039H7.34473V11.0605H8.64551V8.65039H11.0605V7.34961H8.64551V4.93945H7.34473Z" fill="currentColor"></path></svg></button>
+            <div class="fffde-img cccx" style="justify-content: center;">
+                <!-- <a><img src="image/3.jpg" alt=""></a>
+                <a style="z-index: 3;"><img src="image/2.jpg" alt=""></a>
+                <a style="z-index: 5;"><img src="image/4.webp" alt=""></a> -->
+                <span>تفسير القرآن</span>
+            </div>
+            <div class="flex cccx">
+                <button class="button" id="openBtn" style="margin-right: 8px;"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2027 4.90036V6.43657H2.79727V4.90036H17.2027Z" fill="currentColor"></path><path d="M10.9604 13.0635V14.5997H2.79727V13.0635H10.9604Z" fill="currentColor"></path></svg></button>
+                <button class="button" id="newChatBtn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 0.599609C3.91309 0.599609 0.599609 3.91309 0.599609 8C0.599609 9.13376 0.855461 10.2098 1.3125 11.1719L1.5918 11.7588L2.76562 11.2012L2.48633 10.6143C2.11034 9.82278 1.90039 8.93675 1.90039 8C1.90039 4.63106 4.63106 1.90039 8 1.90039C11.3689 1.90039 14.0996 4.63106 14.0996 8C14.0996 11.3689 11.3689 14.0996 8 14.0996C7.31041 14.0996 6.80528 14.0514 6.35742 13.9277C5.91623 13.8059 5.49768 13.6021 4.99707 13.2529C4.26492 12.7422 3.21611 12.5616 2.35156 13.1074L2.33789 13.1162L2.32422 13.126L1.58789 13.6436L2.01953 14.9297L3.0459 14.207C3.36351 14.0065 3.83838 14.0294 4.25293 14.3184C4.84547 14.7317 5.39743 15.011 6.01172 15.1807C6.61947 15.3485 7.25549 15.4004 8 15.4004C12.0869 15.4004 15.4004 12.0869 15.4004 8C15.4004 3.91309 12.0869 0.599609 8 0.599609ZM7.34473 4.93945V7.34961H4.93945V8.65039H7.34473V11.0605H8.64551V8.65039H11.0605V7.34961H8.64551V4.93945H7.34473Z" fill="currentColor"></path></svg></button>
+            </div>
         </div>
     </div>
     <div class="messages" id="messages"></div>
@@ -643,6 +732,19 @@ svg,ion-icon {
         <input type="search" id="searchInput" placeholder="اكتب سؤالك هنا..." autofocus>
         <button class="scr-top Wave-center" id="scrollToBottomBtn"><ion-icon name="arrow-down-outline"></ion-icon></button>
     </div>
+
+    <div class="overlay" id="overlay"></div>
+        <div class="menu sidebar" id="sidebar">
+            <div class="flex menu-d">تفسير القرآن <button class="button Wave-center" id="closeBtn"><ion-icon name="close-outline"></ion-icon></button></div>
+            <div class="menu-div Wave-all">
+                <label for="newChatBtn">محادثة جديدة</label>
+                <input type="text" id="recoveryCode" readonly style="display: none;">
+                <a id="copyCodeBtn">نسخ رابط إستعادة المحادثه</a>
+                <a>ساهم معنا</a>
+                <a>إدعمنا</a>
+                <input type="text" id="verificationInput" placeholder="أدخل رابط الإستعاده">
+            </div>
+        </div>
 </div>
 
 
@@ -665,6 +767,7 @@ svg,ion-icon {
 
 
 <script src="script.js"></script>
+<script src="scrip.js"></script>
 <script src="data.js"></script>
 
 <!-- 
