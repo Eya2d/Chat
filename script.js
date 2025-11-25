@@ -79,18 +79,9 @@ window.onload = () => {
         }
     }
 
-    // ======== التمرير إلى الأسفل عند فتح الموقع ========
-    function initializeScroll() {
-        // الانتظار حتى يتم تحميل المحتوى بالكامل
-        setTimeout(() => {
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            
-            // تأكيد التمرير بعد فترة قصيرة للتأكد من اكتمال التحميل
-            setTimeout(() => {
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-                toggleScrollButton();
-            }, 100);
-        }, 200);
+    // دالة للتمرير إلى الأسفل فوراً (بدون animation)
+    function scrollToBottomImmediate() {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
     
     // ======== زر مشاركة الرابط ========
@@ -229,12 +220,12 @@ window.onload = () => {
         const saved = localStorage.getItem('chatMessages');
         if (saved) {
             messagesDiv.innerHTML = saved;
-            // التمرير إلى الأسفل بعد تحميل الرسائل
+            // تمرير فوري إلى الأسفل بعد تحميل الرسائل
             setTimeout(() => {
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-                // تحقق من حالة زر النزول بعد التحميل
-                setTimeout(toggleScrollButton, 100);
-            }, 100);
+                scrollToBottomImmediate();
+            }, 50);
+            // تحقق من حالة زر النزول بعد التحميل
+            setTimeout(toggleScrollButton, 100);
         }
     }
 
@@ -1178,6 +1169,11 @@ window.onload = () => {
     }
     searchInput.focus();
     
+    // تمرير فوري إلى الأسفل بعد تحميل الصفحة بالكامل
+    setTimeout(() => {
+        scrollToBottomImmediate();
+    }, 100);
+    
     // بدء التحميل البطيء للاقتراحات في الخلفية بعد تحميل الصفحة
     setTimeout(() => {
         generateAyahSuggestionsLazy();
@@ -1185,7 +1181,4 @@ window.onload = () => {
 
     // التحقق الأولي من حالة زر النزول لأسفل
     setTimeout(toggleScrollButton, 500);
-
-    // ======== التمرير إلى الأسفل عند فتح الموقع ========
-    initializeScroll();
 };
