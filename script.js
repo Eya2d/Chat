@@ -10,14 +10,18 @@ window.onload = () => {
     let isNavigatingWithArrows = false;
     let dynamicSuggestions = [];
     let suggestionsGenerated = false;
+    let isScrollingEnabled = true; // متغير للتحكم في التمرير التلقائي
 
     // ======== التحكم في زر النزول لأسفل ========
     function toggleScrollButton() {
         // احسب المسافة من الأسفل
         const scrollBottom = messagesDiv.scrollHeight - messagesDiv.scrollTop - messagesDiv.clientHeight;
         
-        // إذا كان المستخدم ليس في الأسفل تمامًا، أظهر الزر
-        if (scrollBottom > 100) {
+        // تحقق إذا كان الـ scroll يعمل (إذا كان هناك محتوى يتجاوز ارتفاع الحاوية)
+        const isScrollable = messagesDiv.scrollHeight > messagesDiv.clientHeight;
+        
+        // إذا كان المستخدم ليس في الأسفل تمامًا وكان الـ scroll يعمل، أظهر الزر
+        if (scrollBottom > 100 && isScrollable) {
             scrollToBottomBtn.classList.add('show');
         } else {
             scrollToBottomBtn.classList.remove('show');
@@ -34,6 +38,60 @@ window.onload = () => {
             behavior: 'smooth'
         });
     });
+
+    // ======== تمكين/تعطيل التمرير التلقائي أثناء الكتابة ========
+    function enableAutoScroll() {
+        isScrollingEnabled = true;
+    }
+
+    function disableAutoScroll() {
+        isScrollingEnabled = false;
+    }
+
+    // استمع لحدث التمرير اليدوي
+    messagesDiv.addEventListener('wheel', () => {
+        // إذا قام المستخدم بالتمرير يدوياً، عطل التمرير التلقائي مؤقتاً
+        disableAutoScroll();
+        
+        // إعادة تمكين التمرير التلقائي بعد ثانية من عدم التمرير
+        clearTimeout(window.scrollTimeout);
+        window.scrollTimeout = setTimeout(() => {
+            enableAutoScroll();
+        }, 1000);
+    });
+
+    // استمع لحدث السحب (للشاشات التي تعمل باللمس)
+    messagesDiv.addEventListener('touchmove', () => {
+        disableAutoScroll();
+        clearTimeout(window.scrollTimeout);
+        window.scrollTimeout = setTimeout(() => {
+            enableAutoScroll();
+        }, 1000);
+    });
+
+    // دالة للتمرير إلى الأسفل مع التحقق من التمكين
+    function scrollToBottom() {
+        if (isScrollingEnabled) {
+            messagesDiv.scrollTo({
+                top: messagesDiv.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+    }
+
+    // ======== التمرير إلى الأسفل عند فتح الموقع ========
+    function initializeScroll() {
+        // الانتظار حتى يتم تحميل المحتوى بالكامل
+        setTimeout(() => {
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            // تأكيد التمرير بعد فترة قصيرة للتأكد من اكتمال التحميل
+            setTimeout(() => {
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                toggleScrollButton();
+            }, 100);
+        }, 200);
+    }
     
     // ======== زر مشاركة الرابط ========
     shareBtn.addEventListener('click', async () => {
@@ -171,9 +229,12 @@ window.onload = () => {
         const saved = localStorage.getItem('chatMessages');
         if (saved) {
             messagesDiv.innerHTML = saved;
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            // تحقق من حالة زر النزول بعد التحميل
-            setTimeout(toggleScrollButton, 100);
+            // التمرير إلى الأسفل بعد تحميل الرسائل
+            setTimeout(() => {
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                // تحقق من حالة زر النزول بعد التحميل
+                setTimeout(toggleScrollButton, 100);
+            }, 100);
         }
     }
 
@@ -182,15 +243,57 @@ window.onload = () => {
         localStorage.setItem('chatMessages', messagesDiv.innerHTML);
     }
 
+    // ======== معالجة النص واستبدال علامات الصور ========
+    function processTextWithImages(text) {
+        // إذا كان النص يحتوي على علامات img، قم بمعالجتها
+        if (text.includes('<img')) {
+            // استبدل علامات الصور بنسخة محسنة
+            return text.replace(/<img src="([^"]+)"\s*(\/)?>/g, (match, src) => {
+                return `<div class="message-image-container">
+                    <img src="${src}" alt="صورة توضيحية" class="message-image" loading="lazy">
+                    <div class="image-loading">جاري تحميل الصورة...</div>
+                </div>`;
+            });
+        }
+        return text;
+    }
+
     // ======== إضافة رسالة مع دعم الصور ========
     function addMessage(text, sender, isNew = true) {
         const msg = document.createElement('div');
         msg.classList.add('message', sender);
         if (isNew) msg.classList.add('new');
         
+        // معالجة النص لدعم الصور
+        const processedText = processTextWithImages(text);
+        
         // تحقق إذا كان النص يحتوي على علامات HTML للصور
-        if (text.includes('<img')) {
-            msg.innerHTML = text;
+        if (processedText.includes('<img') || processedText.includes('message-image-container')) {
+            msg.innerHTML = processedText;
+            
+            // إضافة مستمعين لأحداث تحميل الصور
+            const images = msg.querySelectorAll('.message-image');
+            images.forEach(img => {
+                img.addEventListener('load', () => {
+                    const container = img.closest('.message-image-container');
+                    const loading = container.querySelector('.image-loading');
+                    if (loading) {
+                        loading.style.display = 'none';
+                    }
+                    img.style.display = 'block';
+                    // إعادة حساب التمرير بعد تحميل الصورة
+                    setTimeout(toggleScrollButton, 100);
+                });
+                
+                img.addEventListener('error', () => {
+                    const container = img.closest('.message-image-container');
+                    const loading = container.querySelector('.image-loading');
+                    if (loading) {
+                        loading.textContent = 'فشل تحميل الصورة';
+                        loading.style.color = '#e53e3e';
+                    }
+                });
+            });
         } else {
             const imageParts = extractImageParts(text);
             
@@ -227,7 +330,7 @@ window.onload = () => {
         }
         
         messagesDiv.appendChild(msg);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        scrollToBottom();
         saveMessages();
         
         // تحقق من حالة زر النزول بعد إضافة الرسالة
@@ -236,7 +339,7 @@ window.onload = () => {
     }
 
     // ======== إضافة رسالة البوت مع تأثير الكتابة حرفًا حرفًا ========
-    function addBotMessageWithTyping(text, isNew = true) {
+    function addBotMessageWithTyping(text, isNew = true, isFirstChunk = false, onComplete = null) {
         const msg = document.createElement('div');
         msg.classList.add('message', 'bot');
         if (isNew) msg.classList.add('new');
@@ -246,14 +349,45 @@ window.onload = () => {
             msg.classList.add('typing-message');
         }
         
+        // إضافة border-top-left-radius للجزء الأول من الرسائل المتعددة
+        if (isFirstChunk) {
+            msg.style.borderTopLeftRadius = '4px';
+        }
+        
         messagesDiv.appendChild(msg);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        scrollToBottom();
         
         // إذا كانت الرسالة قديمة (محملة من الذاكرة)، عرضها مباشرة
         if (!isNew) {
+            // معالجة النص لدعم الصور
+            const processedText = processTextWithImages(text);
+            
             // تحقق إذا كان النص يحتوي على علامات HTML للصور
-            if (text.includes('<img')) {
-                msg.innerHTML = text;
+            if (processedText.includes('<img') || processedText.includes('message-image-container')) {
+                msg.innerHTML = processedText;
+                
+                // إضافة مستمعين لأحداث تحميل الصور
+                const images = msg.querySelectorAll('.message-image');
+                images.forEach(img => {
+                    img.addEventListener('load', () => {
+                        const container = img.closest('.message-image-container');
+                        const loading = container.querySelector('.image-loading');
+                        if (loading) {
+                            loading.style.display = 'none';
+                        }
+                        img.style.display = 'block';
+                        setTimeout(toggleScrollButton, 100);
+                    });
+                    
+                    img.addEventListener('error', () => {
+                        const container = img.closest('.message-image-container');
+                        const loading = container.querySelector('.image-loading');
+                        if (loading) {
+                            loading.textContent = 'فشل تحميل الصورة';
+                            loading.style.color = '#e53e3e';
+                        }
+                    });
+                });
             } else {
                 const imageParts = extractImageParts(text);
                 
@@ -289,58 +423,111 @@ window.onload = () => {
                 }
             }
             saveMessages();
+            if (onComplete) onComplete();
             return msg;
         }
         
-        // للرسائل الجديدة، استخدم تأثير الكتابة مع دعم الأقواس
+        // للرسائل الجديدة، استخدم تأثير الكتابة مع دعم الأقواس والصور
         let currentIndex = 0;
         const typingSpeed = 20; // سرعة الكتابة (بالمللي ثانية)
         let isInsideParentheses = false;
         let currentParenthesesContent = '';
+        let isInsideImageTag = false;
+        let currentImageTag = '';
         
         function typeCharacter() {
             if (currentIndex < text.length) {
                 const currentChar = text[currentIndex];
                 
-                // التحقق إذا كنا داخل الأقواس
-                if (currentChar === '(') {
-                    isInsideParentheses = true;
-                    currentParenthesesContent = '';
+                // التحقق إذا كنا داخل علامة صورة
+                if (currentChar === '<' && text.substring(currentIndex, currentIndex + 4).toLowerCase() === '<img') {
+                    isInsideImageTag = true;
+                    currentImageTag = '';
                 }
                 
-                if (isInsideParentheses) {
-                    currentParenthesesContent += currentChar;
+                if (isInsideImageTag) {
+                    currentImageTag += currentChar;
                     
-                    // إذا وصلنا إلى نهاية الأقواس
-                    if (currentChar === ')') {
-                        isInsideParentheses = false;
+                    // إذا وصلنا إلى نهاية علامة الصورة
+                    if (currentChar === '>') {
+                        isInsideImageTag = false;
                         
-                        // إنشاء سبان خاص للنص داخل الأقواس
-                        const imageSpan = document.createElement('span');
-                        imageSpan.textContent = currentParenthesesContent;
-                        imageSpan.style.color = 'rgb(120, 126, 232)';
-                        imageSpan.style.fontWeight = 'bold';
-                        imageSpan.style.backgroundColor = '#fff';
-                        imageSpan.style.padding = '2px 6px';
-                        imageSpan.style.borderRadius = '4px';
-                        imageSpan.style.margin = '0 2px';
-                        imageSpan.style.fontSize = '0.9em';
+                        // معالجة علامة الصورة وإضافتها مباشرة
+                        const processedImage = processTextWithImages(currentImageTag);
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = processedImage;
                         
-                        msg.appendChild(imageSpan);
+                        // إضافة الصورة إلى الرسالة
+                        while (tempDiv.firstChild) {
+                            msg.appendChild(tempDiv.firstChild);
+                        }
+                        
+                        // إضافة مستمعين لأحداث تحميل الصور
+                        const images = msg.querySelectorAll('.message-image');
+                        images.forEach(img => {
+                            img.addEventListener('load', () => {
+                                const container = img.closest('.message-image-container');
+                                const loading = container.querySelector('.image-loading');
+                                if (loading) {
+                                    loading.style.display = 'none';
+                                }
+                                img.style.display = 'block';
+                                setTimeout(toggleScrollButton, 100);
+                            });
+                            
+                            img.addEventListener('error', () => {
+                                const container = img.closest('.message-image-container');
+                                const loading = container.querySelector('.image-loading');
+                                if (loading) {
+                                    loading.textContent = 'فشل تحميل الصورة';
+                                    loading.style.color = '#e53e3e';
+                                }
+                            });
+                        });
+                        
+                        currentImageTag = '';
+                    }
+                } else if (!isInsideImageTag) {
+                    // التحقق إذا كنا داخل الأقواس
+                    if (currentChar === '(') {
+                        isInsideParentheses = true;
                         currentParenthesesContent = '';
                     }
-                } else {
-                    // إذا كنا خارج الأقواس، أضف الحرف العادي
-                    if (currentChar !== ')') { // تجاهل قوس الإغلاق لأنه تم معالجته بالفعل
-                        const textNode = document.createTextNode(currentChar);
-                        msg.appendChild(textNode);
+                    
+                    if (isInsideParentheses) {
+                        currentParenthesesContent += currentChar;
+                        
+                        // إذا وصلنا إلى نهاية الأقواس
+                        if (currentChar === ')') {
+                            isInsideParentheses = false;
+                            
+                            // إنشاء سبان خاص للنص داخل الأقواس
+                            const imageSpan = document.createElement('span');
+                            imageSpan.textContent = currentParenthesesContent;
+                            imageSpan.style.color = 'rgb(120, 126, 232)';
+                            imageSpan.style.fontWeight = 'bold';
+                            imageSpan.style.backgroundColor = '#fff';
+                            imageSpan.style.padding = '2px 6px';
+                            imageSpan.style.borderRadius = '4px';
+                            imageSpan.style.margin = '0 2px';
+                            imageSpan.style.fontSize = '0.9em';
+                            
+                            msg.appendChild(imageSpan);
+                            currentParenthesesContent = '';
+                        }
+                    } else {
+                        // إذا كنا خارج الأقواس وعلامات الصور، أضف الحرف العادي
+                        if (currentChar !== ')') { // تجاهل قوس الإغلاق لأنه تم معالجته بالفعل
+                            const textNode = document.createTextNode(currentChar);
+                            msg.appendChild(textNode);
+                        }
                     }
                 }
                 
                 currentIndex++;
                 
-                // التمرير لأسفل مع كل حرف جديد
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                // التمرير لأسفل مع كل حرف جديد (مع التحقق من التمكين)
+                scrollToBottom();
                 
                 // الاستمرار في الكتابة
                 setTimeout(typeCharacter, typingSpeed);
@@ -350,6 +537,9 @@ window.onload = () => {
                 
                 // تحقق من حالة زر النزول بعد انتهاء الكتابة
                 setTimeout(toggleScrollButton, 100);
+                
+                // استدعاء دالة الإكمال إذا كانت موجودة
+                if (onComplete) onComplete();
             }
         }
         
@@ -367,7 +557,7 @@ window.onload = () => {
         indicator.classList.add('typing-indicator');
         indicator.innerHTML = '<span></span><span></span><span></span>';
         messagesDiv.appendChild(indicator);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        scrollToBottom();
         
         // تحقق من حالة زر النزول بعد إضافة المؤشر
         setTimeout(toggleScrollButton, 100);
@@ -383,52 +573,66 @@ window.onload = () => {
         return chunks;
     }
 
+    // ======== إنشاء زر جلب المزيد ========
+    function createMoreButton(onClick) {
+        const buttonDiv = document.createElement("div");
+        buttonDiv.style.margin = "14px 0 24px 0";
+        buttonDiv.style.textAlign = "left";
+
+        const moreBtn = document.createElement("button");
+        moreBtn.textContent = "جلب المزيد";
+        moreBtn.className = "more-btn Wave-cloud";
+
+        moreBtn.onclick = () => {
+            // إزالة الزر فور النقر عليه
+            if (buttonDiv.parentElement) {
+                buttonDiv.remove();
+            }
+            // تنفيذ الإجراء المطلوب
+            onClick();
+        };
+
+        buttonDiv.appendChild(moreBtn);
+        messagesDiv.appendChild(buttonDiv);
+        scrollToBottom();
+        
+        // تحقق من حالة زر النزول بعد إضافة الزر
+        setTimeout(toggleScrollButton, 100);
+        
+        return buttonDiv;
+    }
+
     // ======== عرض الإجابة الطويلة مع دعم الصور وتأثير الكتابة ========
     function showLongAnswer(answerText) {
         const chunks = splitTextIntoChunks(answerText, 220);
         let currentIndex = 0;
         let buttonDiv = null;
 
-        function createMoreButton() {
-            if (buttonDiv && buttonDiv.parentElement) {
-                buttonDiv.remove();
-            }
-            buttonDiv = document.createElement("div");
-            buttonDiv.style.margin = "14px 0 24px 0";
-            buttonDiv.style.textAlign = "left";
-
-            const moreBtn = document.createElement("button");
-            moreBtn.textContent = "جلب المزيد";
-            moreBtn.className = "more-btn Wave-cloud";
-
-            moreBtn.onclick = () => {
-                if (currentIndex < chunks.length) {
-                    addBotMessageWithTyping(chunks[currentIndex]);
+        function showNextChunk() {
+            if (currentIndex < chunks.length) {
+                // إضافة border-top-left-radius للجزء الأول فقط
+                const isFirstChunk = (currentIndex === 0);
+                
+                // إضافة الرسالة مع دالة اكتمال
+                addBotMessageWithTyping(chunks[currentIndex], true, isFirstChunk, () => {
+                    // بعد اكتمال عرض الرسالة، تحقق إذا كان هناك المزيد
                     currentIndex++;
-                    buttonDiv.remove();
-
-                    if (currentIndex >= chunks.length) {
+                    
+                    if (currentIndex < chunks.length) {
+                        // إنشاء زر جلب المزيد بعد اكتمال الرسالة
+                        setTimeout(() => {
+                            buttonDiv = createMoreButton(showNextChunk);
+                        }, 300);
+                    } else {
+                        // لا توجد أجزاء أخرى، حفظ الرسائل
                         saveMessages();
-                        return;
                     }
-                    createMoreButton();
-                }
-            };
-
-            buttonDiv.appendChild(moreBtn);
-            messagesDiv.appendChild(buttonDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            
-            // تحقق من حالة زر النزول بعد إضافة الزر
-            setTimeout(toggleScrollButton, 100);
+                });
+            }
         }
 
-        addBotMessageWithTyping(chunks[0]);
-        currentIndex = 1;
-
-        if (currentIndex < chunks.length) {
-            createMoreButton();
-        }
+        // بدء عرض الجزء الأول
+        showNextChunk();
     }
 
     // ======== استخراج مقتطف من النص حول الكلمة المطلوبة ========
@@ -978,4 +1182,10 @@ window.onload = () => {
     setTimeout(() => {
         generateAyahSuggestionsLazy();
     }, 1000);
+
+    // التحقق الأولي من حالة زر النزول لأسفل
+    setTimeout(toggleScrollButton, 500);
+
+    // ======== التمرير إلى الأسفل عند فتح الموقع ========
+    initializeScroll();
 };
