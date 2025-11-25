@@ -525,16 +525,18 @@ svg,ion-icon {
     z-index: 150;
     left: -261px; /* مخفية */
     top: 0;
+    opacity: 0;
     display: flex;
     flex-direction: column;
     height: 100%;
     width: 261px;
     padding: 6px 12px 10px;
     background: white;
-    transition: left 0.3s ease;
+    transition: all 0.3s ease;
     box-shadow: none;
 }
 .sidebar.show {
+    opacity: 1;
     left: 0;
     box-shadow: 2px 0px 44px #51597354;
 }
