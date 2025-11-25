@@ -462,109 +462,117 @@ window.onload = () => {
             noResult.textContent = "لا توجد نتائج...";
             noResult.className = "no";
             suggestionsDiv.appendChild(noResult);
+            suggestionsDiv.style.display = 'block';
         } else {
+            suggestionsDiv.style.display = 'block';
+            
+            // إضافة الاقتراحات مع تأخير 1 مللي ثانية بين كل واحدة وأخرى
             filtered.forEach((item, index) => {
-                const suggestionItem = document.createElement('div');
-                suggestionItem.classList.add('suggestion-item');
-                
-                const btn = document.createElement('button');
-                btn.classList.add('suggestion-btn');
-                
-                if (item.isTextSearch || item.searchSnippets) {
-                    const title = document.createElement('div');
-                    title.textContent = item.q;
-                    title.style.fontWeight = 'bold';
-                    title.style.marginBottom = '6px';
-                    title.style.textAlign = 'right';
-                    title.style.color = '#1a365d';
+                setTimeout(() => {
+                    const suggestionItem = document.createElement('div');
+                    suggestionItem.classList.add('suggestion-item');
                     
-                    if (item.searchSnippets && item.searchSnippets.length > 0) {
-                        // عرض المقتطفات الفريدة فقط
-                        const uniqueSnippets = [];
-                        const seenSnippets = new Set();
+                    const btn = document.createElement('button');
+                    btn.classList.add('suggestion-btn');
+                    
+                    if (item.isTextSearch || item.searchSnippets) {
+                        const title = document.createElement('div');
+                        title.textContent = item.q;
+                        title.style.fontWeight = 'bold';
+                        title.style.marginBottom = '6px';
+                        title.style.textAlign = 'right';
+                        title.style.color = '#1a365d';
                         
-                        item.searchSnippets.forEach(snippet => {
-                            const normalizedSnippet = snippet.substring(0, 80); // تقليل طول المقتطف للكشف عن التكرار
-                            if (!seenSnippets.has(normalizedSnippet)) {
-                                seenSnippets.add(normalizedSnippet);
-                                uniqueSnippets.push(snippet);
-                            }
-                        });
-                        
-                        uniqueSnippets.slice(0, 2).forEach((snippet, snippetIndex) => {
-                            const snippetDiv = document.createElement('div');
-                            snippetDiv.style.fontSize = '0.8em';
-                            snippetDiv.style.color = '#2d3748';
-                            snippetDiv.style.marginBottom = '4px';
-                            snippetDiv.style.lineHeight = '1.4';
-                            snippetDiv.style.textAlign = 'right';
-                            snippetDiv.style.padding = '4px 8px';
-                            snippetDiv.style.backgroundColor = '#f7fafc';
-                            snippetDiv.style.borderRadius = '4px';
-                            snippetDiv.style.borderRight = '3px solid #4299e1';
+                        if (item.searchSnippets && item.searchSnippets.length > 0) {
+                            // عرض المقتطفات الفريدة فقط
+                            const uniqueSnippets = [];
+                            const seenSnippets = new Set();
                             
-                            let highlightedSnippet = snippet;
-                            const searchWords = value.toLowerCase().split(/\s+/);
-                            searchWords.forEach(word => {
-                                if (word.length > 1) {
-                                    const regex = new RegExp(`(${word})`, 'gi');
-                                    highlightedSnippet = highlightedSnippet.replace(regex, '<mark style="background-color: #ffeb3b; padding: 1px 2px; border-radius: 2px;">$1</mark>');
+                            item.searchSnippets.forEach(snippet => {
+                                const normalizedSnippet = snippet.substring(0, 80); // تقليل طول المقتطف للكشف عن التكرار
+                                if (!seenSnippets.has(normalizedSnippet)) {
+                                    seenSnippets.add(normalizedSnippet);
+                                    uniqueSnippets.push(snippet);
                                 }
                             });
                             
-                            snippetDiv.innerHTML = highlightedSnippet;
-                            btn.appendChild(snippetDiv);
-                        });
+                            uniqueSnippets.slice(0, 2).forEach((snippet, snippetIndex) => {
+                                const snippetDiv = document.createElement('div');
+                                snippetDiv.style.fontSize = '0.8em';
+                                snippetDiv.style.color = '#2d3748';
+                                snippetDiv.style.marginBottom = '4px';
+                                snippetDiv.style.lineHeight = '1.4';
+                                snippetDiv.style.textAlign = 'right';
+                                snippetDiv.style.padding = '4px 8px';
+                                snippetDiv.style.backgroundColor = '#f7fafc';
+                                snippetDiv.style.borderRadius = '4px';
+                                snippetDiv.style.borderRight = '3px solid #4299e1';
+                                
+                                let highlightedSnippet = snippet;
+                                const searchWords = value.toLowerCase().split(/\s+/);
+                                searchWords.forEach(word => {
+                                    if (word.length > 1) {
+                                        const regex = new RegExp(`(${word})`, 'gi');
+                                        highlightedSnippet = highlightedSnippet.replace(regex, '<mark style="background-color: #ffeb3b; padding: 1px 2px; border-radius: 2px;">$1</mark>');
+                                    }
+                                });
+                                
+                                snippetDiv.innerHTML = highlightedSnippet;
+                                btn.appendChild(snippetDiv);
+                            });
+                        }
+                        
+                        const source = document.createElement('div');
+                        source.textContent = `${item.surah.replace('تفسير ', '')} - آية ${item.ayah}`;
+                        source.style.fontSize = '0.75em';
+                        source.style.color = '#718096';
+                        source.style.fontStyle = 'italic';
+                        source.style.textAlign = 'right';
+                        source.style.marginTop = '4px';
+                        
+                        if (item.imageParts && item.imageParts.length > 0) {
+                            const imagesDiv = document.createElement('div');
+                            imagesDiv.style.fontSize = '0.7em';
+                            imagesDiv.style.color = '#d69e2e';
+                            imagesDiv.style.marginTop = '4px';
+                            imagesDiv.style.marginBottom = "4px";
+                            imagesDiv.style.padding = '2px 6px';
+                            imagesDiv.style.backgroundColor = '#fefcbf';
+                            imagesDiv.style.borderRadius = '4px';
+                            imagesDiv.textContent = `◀ ${item.imageParts.join('، ')}`;
+                            imagesDiv.style.textAlign = 'right';
+                            btn.appendChild(imagesDiv);
+                        }
+                        
+                        btn.appendChild(title);
+                        btn.appendChild(source);
+                    } else {
+                        btn.textContent = item.q;
+                        btn.style.textAlign = 'right';
                     }
                     
-                    const source = document.createElement('div');
-                    source.textContent = `${item.surah.replace('تفسير ', '')} - آية ${item.ayah}`;
-                    source.style.fontSize = '0.75em';
-                    source.style.color = '#718096';
-                    source.style.fontStyle = 'italic';
-                    source.style.textAlign = 'right';
-                    source.style.marginTop = '4px';
-                    
-                    if (item.imageParts && item.imageParts.length > 0) {
-                        const imagesDiv = document.createElement('div');
-                        imagesDiv.style.fontSize = '0.7em';
-                        imagesDiv.style.color = '#d69e2e';
-                        imagesDiv.style.marginTop = '4px';
-                        imagesDiv.style.marginBottom = "4px";
-                        imagesDiv.style.padding = '2px 6px';
-                        imagesDiv.style.backgroundColor = '#fefcbf';
-                        imagesDiv.style.borderRadius = '4px';
-                        imagesDiv.textContent = `◀ ${item.imageParts.join('، ')}`;
-                        imagesDiv.style.textAlign = 'right';
-                        btn.appendChild(imagesDiv);
+                    if (index === 0) {
+                        btn.style.backgroundColor = "rgb(219, 234, 254)";
+                    } else {
+                        btn.style.backgroundColor = "#f1f5f9";
                     }
                     
-                    btn.appendChild(title);
-                    btn.appendChild(source);
-                } else {
-                    btn.textContent = item.q;
-                    btn.style.textAlign = 'right';
-                }
-                
-                if (index === 0) {
-                    btn.style.backgroundColor = "rgb(219, 234, 254)";
-                } else {
-                    btn.style.backgroundColor = "#f1f5f9";
-                }
-                
-                btn.addEventListener('click', () => {
-                    searchInput.value = item.q;
-                    handleQuestion(item);
-                    // إزالة الفوكس من خانة البحث عند النقر على نتيجة
-                    searchInput.blur();
-                });
-                
-                suggestionItem.appendChild(btn);
-                suggestionsDiv.appendChild(suggestionItem);
+                    btn.addEventListener('click', () => {
+                        searchInput.value = item.q;
+                        handleQuestion(item);
+                        // إزالة الفوكس من خانة البحث عند النقر على نتيجة
+                        searchInput.blur();
+                    });
+                    
+                    suggestionItem.appendChild(btn);
+                    suggestionsDiv.appendChild(suggestionItem);
+                    
+                    // تحديث التحديد بعد إضافة كل اقتراح
+                    updateSelectedSuggestion();
+                    
+                }, index * 1); // تأخير 1 مللي ثانية بين كل اقتراح وآخر
             });
         }
-
-        suggestionsDiv.style.display = filtered.length > 0 ? 'block' : 'none';
     }
 
     // ======== تحديث خلفية الأزرار المختارة ========
