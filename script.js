@@ -5,22 +5,158 @@ window.onload = () => {
     const newChatBtn = document.getElementById('newChatBtn');
     const shareBtn = document.getElementById('shareBtn');
     const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
+    const spinner = document.getElementById('spinner');
     
     let selectedIndex = 0;
     let isNavigatingWithArrows = false;
     let dynamicSuggestions = [];
     let suggestionsGenerated = false;
-    let isScrollingEnabled = true; // متغير للتحكم في التمرير التلقائي
+    let isScrollingEnabled = true;
+    let currentTypingMessage = null;
+    let hasPendingMessages = false;
+    let isProcessingQuestion = false;
+    let typingInProgress = false;
+
+    // ======== دالة إظهار/إخفاء spinner ========
+    function showSpinner() {
+        spinner.style.display = 'flex';
+        searchInput.disabled = true;
+        searchInput.placeholder = 'جاري المعالجة...';
+        isProcessingQuestion = true;
+    }
+
+    function hideSpinner() {
+        spinner.style.display = 'none';
+        searchInput.disabled = false;
+        searchInput.placeholder = 'اكتب سؤالك عن تفسير القرآن...';
+        isProcessingQuestion = false;
+        typingInProgress = false;
+    }
+
+    // ======== دالة تغيير أيقونة النسخ ========
+    function changeCopyIcon(copyBtn) {
+        const icon = copyBtn.querySelector('ion-icon');
+        const originalIcon = icon.getAttribute('name');
+        
+        // تغيير الأيقونة إلى علامة الصح
+        icon.setAttribute('name', 'checkmark-outline');
+        
+        // إعادة الأيقونة الأصلية بعد ثانية
+        setTimeout(() => {
+            icon.setAttribute('name', originalIcon);
+        }, 1000);
+    }
+
+    // ======== دالة تبديل طول الرسالة ========
+    function toggleMessageHeight(txtBtn) {
+        const wrapper = txtBtn.closest('.bot-message-wrapper');
+        const message = wrapper.querySelector('.message');
+        const icon = txtBtn.querySelector('ion-icon');
+        const textSpan = txtBtn.querySelector('.btn-text');
+        
+        if (message.classList.contains('collapsed')) {
+            // إرجاع الرسالة إلى طولها الأصلي (Long)
+            message.classList.remove('collapsed');
+            message.style.maxHeight = 'none';
+            icon.setAttribute('name', 'reorder-three-outline');
+            textSpan.textContent = 'Short';
+        } else {
+            // تقليص الرسالة إلى النصف (Short)
+            message.classList.add('collapsed');
+            const currentHeight = message.scrollHeight;
+            message.style.maxHeight = (currentHeight / 2) + 'px';
+            icon.setAttribute('name', 'reorder-four-outline');
+            textSpan.textContent = 'Long';
+        }
+    }
+
+    // ======== تطبيق الوضع الافتراضي (Short) على الرسالة ========
+    function applyDefaultShortState(messageElement, txtBtn) {
+        if (messageElement && txtBtn) {
+            // جعل الرسالة في وضع Short (تقليص)
+            messageElement.classList.add('collapsed');
+            const currentHeight = messageElement.scrollHeight;
+            messageElement.style.maxHeight = (currentHeight / 2) + 'px';
+            
+            // تحديث زر txt-btn ليكون في وضع Long
+            const icon = txtBtn.querySelector('ion-icon');
+            const textSpan = txtBtn.querySelector('.btn-text');
+            icon.setAttribute('name', 'reorder-four-outline');
+            textSpan.textContent = 'Long';
+        }
+    }
+
+    // ======== إعادة ربط أحداث النسخ والمشاركة للرسائل المحفوظة ========
+    function rebindMessageEvents() {
+        document.querySelectorAll('.bot-message-wrapper').forEach(wrapper => {
+            const message = wrapper.querySelector('.message');
+            const chatDiv = wrapper.querySelector('.chat-div');
+            const copyBtn = wrapper.querySelector('.copy-btn');
+            const shareBtn = wrapper.querySelector('.share-btn');
+            const txtBtn = wrapper.querySelector('.txt-btn');
+            
+            if (message && chatDiv && !message.textContent.includes("مرحباً! كيف يمكنني مساعدتك اليوم؟")) {
+                chatDiv.classList.add('show');
+                
+                // إعادة ربط حدث النسخ
+                if (copyBtn) {
+                    copyBtn.addEventListener('click', () => {
+                        const text = message.textContent || message.innerText;
+                        navigator.clipboard.writeText(text).then(() => {
+                            changeCopyIcon(copyBtn);
+                        }).catch(err => {
+                            console.error('فشل النسخ:', err);
+                        });
+                    });
+                }
+                
+                // إعادة ربط حدث المشاركة
+                if (shareBtn) {
+                    shareBtn.addEventListener('click', () => {
+                        const text = message.textContent || message.innerText;
+                        if (navigator.share) {
+                            navigator.share({
+                                title: 'تفسير القرآن الكريم',
+                                text: text,
+                                url: window.location.href
+                            }).catch(err => {
+                                console.error('فشل المشاركة:', err);
+                            });
+                        } else {
+                            navigator.clipboard.writeText(text).then(() => {
+                                console.log('تم نسخ النص للمشاركة');
+                            });
+                        }
+                    });
+                }
+                
+                // إعادة ربط حدث تبديل طول الرسالة
+                if (txtBtn) {
+                    txtBtn.addEventListener('click', () => {
+                        toggleMessageHeight(txtBtn);
+                    });
+                    
+                    // إخفاء زر txt-btn إذا كانت الرسالة قصيرة (أقل من 15 سطر)
+                    const lineHeight = parseInt(getComputedStyle(message).lineHeight);
+                    const messageHeight = message.scrollHeight;
+                    const numberOfLines = messageHeight / lineHeight;
+                    
+                    if (numberOfLines < 15) {
+                        txtBtn.style.display = 'none';
+                    } else {
+                        // تطبيق الوضع الافتراضي (Short) للرسائل المحفوظة
+                        applyDefaultShortState(message, txtBtn);
+                    }
+                }
+            }
+        });
+    }
 
     // ======== التحكم في زر النزول لأسفل ========
     function toggleScrollButton() {
-        // احسب المسافة من الأسفل
         const scrollBottom = messagesDiv.scrollHeight - messagesDiv.scrollTop - messagesDiv.clientHeight;
-        
-        // تحقق إذا كان الـ scroll يعمل (إذا كان هناك محتوى يتجاوز ارتفاع الحاوية)
         const isScrollable = messagesDiv.scrollHeight > messagesDiv.clientHeight;
         
-        // إذا كان المستخدم ليس في الأسفل تمامًا وكان الـ scroll يعمل، أظهر الزر
         if (scrollBottom > 100 && isScrollable) {
             scrollToBottomBtn.classList.add('show');
         } else {
@@ -28,10 +164,8 @@ window.onload = () => {
         }
     }
     
-    // استمع لحدث التمرير
     messagesDiv.addEventListener('scroll', toggleScrollButton);
     
-    // حدث النقر على زر النزول لأسفل
     scrollToBottomBtn.addEventListener('click', () => {
         messagesDiv.scrollTo({
             top: messagesDiv.scrollHeight,
@@ -48,19 +182,14 @@ window.onload = () => {
         isScrollingEnabled = false;
     }
 
-    // استمع لحدث التمرير اليدوي
     messagesDiv.addEventListener('wheel', () => {
-        // إذا قام المستخدم بالتمرير يدوياً، عطل التمرير التلقائي مؤقتاً
         disableAutoScroll();
-        
-        // إعادة تمكين التمرير التلقائي بعد ثانية من عدم التمرير
         clearTimeout(window.scrollTimeout);
         window.scrollTimeout = setTimeout(() => {
             enableAutoScroll();
         }, 1000);
     });
 
-    // استمع لحدث السحب (للشاشات التي تعمل باللمس)
     messagesDiv.addEventListener('touchmove', () => {
         disableAutoScroll();
         clearTimeout(window.scrollTimeout);
@@ -69,7 +198,6 @@ window.onload = () => {
         }, 1000);
     });
 
-    // دالة للتمرير إلى الأسفل مع التحقق من التمكين
     function scrollToBottom() {
         if (isScrollingEnabled) {
             messagesDiv.scrollTo({
@@ -79,7 +207,6 @@ window.onload = () => {
         }
     }
 
-    // دالة للتمرير إلى الأسفل فوراً (بدون animation)
     function scrollToBottomImmediate() {
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
@@ -148,7 +275,6 @@ window.onload = () => {
                     const end = Math.min(words.length, i + contextWords + 1);
                     const snippet = words.slice(start, end).join(' ');
                     
-                    // إضافة النتيجة فقط إذا لم تكن مكررة
                     if (!results.some(item => item.includes(snippet))) {
                         results.push(snippet);
                     }
@@ -156,7 +282,7 @@ window.onload = () => {
             }
         });
         
-        return results.slice(0, 3); // إرجاع أول 3 نتائج فقط
+        return results.slice(0, 3);
     }
 
     // ======== توليد اقتراحات ديناميكية لكل سورة وآياتها - عند الحاجة فقط ========
@@ -165,7 +291,6 @@ window.onload = () => {
         
         dynamicSuggestions = [];
         
-        // تقسيم العمل إلى دفعات صغيرة لتجنب تجميد الواجهة
         let currentIndex = 0;
         const batchSize = 5;
         
@@ -215,17 +340,46 @@ window.onload = () => {
         return [...faq, ...dynamicSuggestions];
     }
 
-    // ======== تحميل الرسائل المحفوظة ========
+    // ======== تحميل الرسائل المحفوظة مع تطبيق الوضع الافتراضي (Short) ========
     function loadMessages() {
         const saved = localStorage.getItem('chatMessages');
         if (saved) {
+            // إضافة المحتوى المحفوظ مباشرة إلى DOM
             messagesDiv.innerHTML = saved;
-            // تمرير فوري إلى الأسفل بعد تحميل الرسائل
+            
             setTimeout(() => {
                 scrollToBottomImmediate();
             }, 50);
-            // تحقق من حالة زر النزول بعد التحميل
             setTimeout(toggleScrollButton, 100);
+            
+            // إعادة ربط الأحداث للرسائل المحفوظة وتطبيق الوضع الافتراضي (Short)
+            setTimeout(() => {
+                document.querySelectorAll('.bot-message-wrapper').forEach(wrapper => {
+                    const message = wrapper.querySelector('.message');
+                    const chatDiv = wrapper.querySelector('.chat-div');
+                    const txtBtn = wrapper.querySelector('.txt-btn');
+                    
+                    if (message && chatDiv && !message.textContent.includes("مرحباً! كيف يمكنني مساعدتك اليوم؟")) {
+                        chatDiv.classList.add('show');
+                        
+                        // إخفاء زر txt-btn إذا كانت الرسالة قصيرة (أقل من 15 سطر)
+                        if (txtBtn) {
+                            const lineHeight = parseInt(getComputedStyle(message).lineHeight);
+                            const messageHeight = message.scrollHeight;
+                            const numberOfLines = messageHeight / lineHeight;
+                            
+                            if (numberOfLines < 15) {
+                                txtBtn.style.display = 'none';
+                            } else {
+                                // تطبيق الوضع الافتراضي (Short) للرسائل المحفوظة
+                                applyDefaultShortState(message, txtBtn);
+                            }
+                        }
+                    }
+                });
+                
+                rebindMessageEvents();
+            }, 100);
         }
     }
 
@@ -236,9 +390,7 @@ window.onload = () => {
 
     // ======== معالجة النص واستبدال علامات الصور ========
     function processTextWithImages(text) {
-        // إذا كان النص يحتوي على علامات img، قم بمعالجتها
         if (text.includes('<img')) {
-            // استبدل علامات الصور بنسخة محسنة
             return text.replace(/<img src="([^"]+)"\s*(\/)?>/g, (match, src) => {
                 return `<div class="message-image-container">
                     <img src="${src}" alt="صورة توضيحية" class="message-image" loading="lazy">
@@ -255,14 +407,11 @@ window.onload = () => {
         msg.classList.add('message', sender);
         if (isNew) msg.classList.add('new');
         
-        // معالجة النص لدعم الصور
         const processedText = processTextWithImages(text);
         
-        // تحقق إذا كان النص يحتوي على علامات HTML للصور
         if (processedText.includes('<img') || processedText.includes('message-image-container')) {
             msg.innerHTML = processedText;
             
-            // إضافة مستمعين لأحداث تحميل الصور
             const images = msg.querySelectorAll('.message-image');
             images.forEach(img => {
                 img.addEventListener('load', () => {
@@ -272,7 +421,6 @@ window.onload = () => {
                         loading.style.display = 'none';
                     }
                     img.style.display = 'block';
-                    // إعادة حساب التمرير بعد تحميل الصورة
                     setTimeout(toggleScrollButton, 100);
                 });
                 
@@ -324,52 +472,76 @@ window.onload = () => {
         scrollToBottom();
         saveMessages();
         
-        // تحقق من حالة زر النزول بعد إضافة الرسالة
         setTimeout(toggleScrollButton, 100);
         return msg;
     }
 
+    // ======== إنشاء HTML للرسالة بناءً على نوعها ========
+    function createMessageHTML(isWelcomeMessage, hasMultipleParts) {
+        if (isWelcomeMessage) {
+            return `<div class="bot-message-wrapper"><div class="message bot new typing-message"></div></div>`;
+        } else {
+            if (hasMultipleParts) {
+                return `<div class="bot-message-wrapper">
+                    <div class="message bot new typing-message"></div>
+                    <div class="chat-div Wave-all">
+                        <button class="txt-btn"><ion-icon name="reorder-four-outline"></ion-icon><span class="btn-text">Long</span></button>
+                        <button class="copy-btn"><ion-icon name="copy-outline"></ion-icon></button>
+                        <button class="share-btn"><ion-icon name="share-social-outline"></ion-icon></button>
+                    </div>
+                </div>`;
+            } else {
+                return `<div class="bot-message-wrapper">
+                    <div class="message bot new typing-message"></div>
+                    <div class="chat-div Wave-all">
+                        <button class="copy-btn"><ion-icon name="copy-outline"></ion-icon></button>
+                        <button class="share-btn"><ion-icon name="share-social-outline"></ion-icon></button>
+                    </div>
+                </div>`;
+            }
+        }
+    }
+
     // ======== إضافة رسالة البوت مع تأثير الكتابة حرفًا حرفًا ========
-    function addBotMessageWithTyping(text, isNew = true, isFirstChunk = false, onComplete = null) {
-        const msg = document.createElement('div');
-        msg.classList.add('message', 'bot');
-        if (isNew) msg.classList.add('new');
+    function addBotMessageWithTyping(text, isNew = true, isFirstChunk = false, onComplete = null, hasMoreParts = false) {
+        // التحقق إذا كانت هذه الرسالة الترحيبية
+        const isWelcomeMessage = text.includes("مرحباً! كيف يمكنني مساعدتك اليوم؟");
         
-        // إضافة فئة خاصة للرسائل الجديدة من البوت
-        if (isNew) {
-            msg.classList.add('typing-message');
-        }
+        // تحديد إذا كانت الرسالة لها أجزاء متعددة (أطول من 200 حرف)
+        const hasMultipleParts = text.length > 200;
         
-        // إضافة border-top-left-radius للجزء الأول من الرسائل المتعددة
-        if (isFirstChunk) {
-            msg.style.borderTopLeftRadius = '4px';
-        }
-        
-        messagesDiv.appendChild(msg);
+        // إنشاء HTML بناءً على نوع الرسالة
+        const msgHTML = createMessageHTML(isWelcomeMessage, hasMultipleParts);
+                    
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = msgHTML.trim();
+                    
+        // الديف الداخلي (الذي فيه الرسالة)
+        const msg = wrapper.querySelector('.message');
+        const chatDiv = wrapper.querySelector('.chat-div');
+        const txtBtn = wrapper.querySelector('.txt-btn');
+                    
+        messagesDiv.appendChild(wrapper);
         scrollToBottom();
-        
-        // إذا كانت الرسالة قديمة (محملة من الذاكرة)، عرضها مباشرة
+                    
+        // ========== رسائل قديمة ==========
         if (!isNew) {
-            // معالجة النص لدعم الصور
             const processedText = processTextWithImages(text);
-            
-            // تحقق إذا كان النص يحتوي على علامات HTML للصور
+        
             if (processedText.includes('<img') || processedText.includes('message-image-container')) {
                 msg.innerHTML = processedText;
-                
-                // إضافة مستمعين لأحداث تحميل الصور
+            
                 const images = msg.querySelectorAll('.message-image');
                 images.forEach(img => {
                     img.addEventListener('load', () => {
                         const container = img.closest('.message-image-container');
                         const loading = container.querySelector('.image-loading');
-                        if (loading) {
-                            loading.style.display = 'none';
-                        }
+                        if (loading) loading.style.display = 'none';
+                    
                         img.style.display = 'block';
                         setTimeout(toggleScrollButton, 100);
                     });
-                    
+                
                     img.addEventListener('error', () => {
                         const container = img.closest('.message-image-container');
                         const loading = container.querySelector('.image-loading');
@@ -381,22 +553,20 @@ window.onload = () => {
                 });
             } else {
                 const imageParts = extractImageParts(text);
-                
+            
                 if (imageParts.length > 0) {
                     const textContainer = document.createElement('div');
                     textContainer.style.whiteSpace = 'pre-wrap';
-                    
+                
                     const parts = text.split(/\(([^)]+)\)/);
-                    
+                
                     parts.forEach((part, index) => {
                         if (index % 2 === 0) {
-                            if (part.trim()) {
-                                const textNode = document.createTextNode(part);
-                                textContainer.appendChild(textNode);
-                            }
+                            if (part.trim()) textContainer.appendChild(document.createTextNode(part));
                         } else {
                             const imageSpan = document.createElement('span');
                             imageSpan.textContent = `(${part})`;
+                            imageSpan.className = "image-tag";
                             imageSpan.style.color = 'rgb(120, 126, 232)';
                             imageSpan.style.fontWeight = 'bold';
                             imageSpan.style.backgroundColor = '#fff';
@@ -407,65 +577,120 @@ window.onload = () => {
                             textContainer.appendChild(imageSpan);
                         }
                     });
-                    
+                
                     msg.appendChild(textContainer);
                 } else {
                     msg.textContent = text;
                 }
             }
+        
+            // إظهار الأزرار للرسائل القديمة المحملة من الذاكرة
+            if (chatDiv && !isWelcomeMessage) {
+                chatDiv.classList.add('show');
+                
+                // ربط أحداث النسخ والمشاركة وتبديل الطول
+                const copyBtn = wrapper.querySelector('.copy-btn');
+                const shareBtn = wrapper.querySelector('.share-btn');
+                
+                if (copyBtn) {
+                    copyBtn.addEventListener('click', () => {
+                        navigator.clipboard.writeText(text).then(() => {
+                            changeCopyIcon(copyBtn);
+                        });
+                    });
+                }
+                
+                if (shareBtn) {
+                    shareBtn.addEventListener('click', () => {
+                        if (navigator.share) {
+                            navigator.share({
+                                title: 'تفسير القرآن الكريم',
+                                text: text,
+                                url: window.location.href
+                            });
+                        } else {
+                            navigator.clipboard.writeText(text).then(() => {
+                                console.log('تم نسخ النص للمشاركة');
+                            });
+                        }
+                    });
+                }
+                
+                if (txtBtn) {
+                    txtBtn.addEventListener('click', () => {
+                        toggleMessageHeight(txtBtn);
+                    });
+                    
+                    // إخفاء زر txt-btn إذا كانت الرسالة قصيرة (أقل من 15 سطر)
+                    const lineHeight = parseInt(getComputedStyle(msg).lineHeight);
+                    const messageHeight = msg.scrollHeight;
+                    const numberOfLines = messageHeight / lineHeight;
+                    
+                    if (numberOfLines < 15) {
+                        txtBtn.style.display = 'none';
+                    } else {
+                        // تطبيق الوضع الافتراضي (Short) للرسائل المحفوظة
+                        applyDefaultShortState(msg, txtBtn);
+                    }
+                }
+            }
+            
             saveMessages();
             if (onComplete) onComplete();
             return msg;
         }
-        
-        // للرسائل الجديدة، استخدم تأثير الكتابة مع دعم الأقواس والصور
+    
+        // ========== تأثير الكتابة ==========
         let currentIndex = 0;
-        const typingSpeed = 20; // سرعة الكتابة (بالمللي ثانية)
+        const typingSpeed = 20;
+        let spinnerShown = false;
+    
         let isInsideParentheses = false;
         let currentParenthesesContent = '';
+    
         let isInsideImageTag = false;
         let currentImageTag = '';
-        
+    
         function typeCharacter() {
             if (currentIndex < text.length) {
                 const currentChar = text[currentIndex];
-                
-                // التحقق إذا كنا داخل علامة صورة
+            
+                // إظهار spinner عند بدء الكتابة (وليس عند بدء ظهور الحروف)
+                if (!spinnerShown && typingInProgress) {
+                    showSpinner();
+                    spinnerShown = true;
+                }
+            
+                // اكتشاف img<
                 if (currentChar === '<' && text.substring(currentIndex, currentIndex + 4).toLowerCase() === '<img') {
                     isInsideImageTag = true;
                     currentImageTag = '';
                 }
-                
+            
+                // داخل وسم img
                 if (isInsideImageTag) {
                     currentImageTag += currentChar;
-                    
-                    // إذا وصلنا إلى نهاية علامة الصورة
+                
                     if (currentChar === '>') {
                         isInsideImageTag = false;
-                        
-                        // معالجة علامة الصورة وإضافتها مباشرة
+                    
                         const processedImage = processTextWithImages(currentImageTag);
                         const tempDiv = document.createElement('div');
                         tempDiv.innerHTML = processedImage;
-                        
-                        // إضافة الصورة إلى الرسالة
-                        while (tempDiv.firstChild) {
-                            msg.appendChild(tempDiv.firstChild);
-                        }
-                        
-                        // إضافة مستمعين لأحداث تحميل الصور
+                    
+                        while (tempDiv.firstChild) msg.appendChild(tempDiv.firstChild);
+                    
                         const images = msg.querySelectorAll('.message-image');
                         images.forEach(img => {
                             img.addEventListener('load', () => {
                                 const container = img.closest('.message-image-container');
                                 const loading = container.querySelector('.image-loading');
-                                if (loading) {
-                                    loading.style.display = 'none';
-                                }
+                                if (loading) loading.style.display = 'none';
+                            
                                 img.style.display = 'block';
                                 setTimeout(toggleScrollButton, 100);
                             });
-                            
+                        
                             img.addEventListener('error', () => {
                                 const container = img.closest('.message-image-container');
                                 const loading = container.querySelector('.image-loading');
@@ -475,24 +700,24 @@ window.onload = () => {
                                 }
                             });
                         });
-                        
+                    
                         currentImageTag = '';
                     }
-                } else if (!isInsideImageTag) {
-                    // التحقق إذا كنا داخل الأقواس
+                }
+            
+                // أقواس () للـ image tags
+                else if (!isInsideImageTag) {
                     if (currentChar === '(') {
                         isInsideParentheses = true;
                         currentParenthesesContent = '';
                     }
-                    
+                
                     if (isInsideParentheses) {
                         currentParenthesesContent += currentChar;
-                        
-                        // إذا وصلنا إلى نهاية الأقواس
+                    
                         if (currentChar === ')') {
                             isInsideParentheses = false;
-                            
-                            // إنشاء سبان خاص للنص داخل الأقواس
+                        
                             const imageSpan = document.createElement('span');
                             imageSpan.textContent = currentParenthesesContent;
                             imageSpan.style.color = 'rgb(120, 126, 232)';
@@ -502,43 +727,92 @@ window.onload = () => {
                             imageSpan.style.borderRadius = '4px';
                             imageSpan.style.margin = '0 2px';
                             imageSpan.style.fontSize = '0.9em';
-                            
+                        
                             msg.appendChild(imageSpan);
                             currentParenthesesContent = '';
                         }
                     } else {
-                        // إذا كنا خارج الأقواس وعلامات الصور، أضف الحرف العادي
-                        if (currentChar !== ')') { // تجاهل قوس الإغلاق لأنه تم معالجته بالفعل
-                            const textNode = document.createTextNode(currentChar);
-                            msg.appendChild(textNode);
+                        if (currentChar !== ')') msg.appendChild(document.createTextNode(currentChar));
+                    }
+                }
+            
+                currentIndex++;
+                scrollToBottom();
+                setTimeout(typeCharacter, typingSpeed);
+            
+            } else {
+                saveMessages();
+                setTimeout(toggleScrollButton, 100);
+                
+                // إخفاء spinner عند اكتمال الكتابة
+                if (spinnerShown) {
+                    hideSpinner();
+                }
+                
+                // إضافة وظائف النسخ والمشاركة بعد اكتمال الكتابة
+                if (!isWelcomeMessage && chatDiv) {
+                    // إظهار الأزرار فقط إذا لم يكن هناك أجزاء باقية
+                    if (!hasMoreParts) {
+                        chatDiv.classList.add('show');
+                        
+                        // التحقق من طول الرسالة بعد اكتمال جميع الأجزاء
+                        const lineHeight = parseInt(getComputedStyle(msg).lineHeight);
+                        const messageHeight = msg.scrollHeight;
+                        const numberOfLines = messageHeight / lineHeight;
+                        
+                        if (hasMultipleParts && numberOfLines >= 15) {
+                            // تطبيق الوضع الافتراضي (Short) فور اكتمال الأجزاء
+                            applyDefaultShortState(msg, txtBtn);
+                        } else {
+                            // إخفاء زر txt-btn إذا كانت الرسالة قصيرة أو ليس لها أجزاء متعددة
+                            if (txtBtn) {
+                                txtBtn.style.display = 'none';
+                            }
                         }
+                    }
+                    
+                    const copyBtn = wrapper.querySelector('.copy-btn');
+                    const shareBtn = wrapper.querySelector('.share-btn');
+                    
+                    if (copyBtn) {
+                        copyBtn.addEventListener('click', () => {
+                            navigator.clipboard.writeText(text).then(() => {
+                                // تغيير أيقونة النسخ عند النقر
+                                changeCopyIcon(copyBtn);
+                            });
+                        });
+                    }
+                    
+                    if (shareBtn) {
+                        shareBtn.addEventListener('click', () => {
+                            if (navigator.share) {
+                                navigator.share({
+                                    title: 'تفسير القرآن الكريم',
+                                    text: text,
+                                    url: window.location.href
+                                });
+                            } else {
+                                navigator.clipboard.writeText(text).then(() => {
+                                    console.log('تم نسخ النص للمشاركة');
+                                });
+                            }
+                        });
+                    }
+                    
+                    if (txtBtn) {
+                        txtBtn.addEventListener('click', () => {
+                            toggleMessageHeight(txtBtn);
+                        });
                     }
                 }
                 
-                currentIndex++;
-                
-                // التمرير لأسفل مع كل حرف جديد (مع التحقق من التمكين)
-                scrollToBottom();
-                
-                // الاستمرار في الكتابة
-                setTimeout(typeCharacter, typingSpeed);
-            } else {
-                // بعد انتهاء الكتابة، حفظ الرسالة
-                saveMessages();
-                
-                // تحقق من حالة زر النزول بعد انتهاء الكتابة
-                setTimeout(toggleScrollButton, 100);
-                
-                // استدعاء دالة الإكمال إذا كانت موجودة
                 if (onComplete) onComplete();
             }
         }
-        
-        // بدء تأثير الكتابة بعد تأخير بسيط
-        setTimeout(() => {
-            typeCharacter();
-        }, 100);
-        
+    
+        // تعيين حالة الكتابة كجارية
+        typingInProgress = true;
+        setTimeout(typeCharacter, 100);
         return msg;
     }
 
@@ -550,7 +824,6 @@ window.onload = () => {
         messagesDiv.appendChild(indicator);
         scrollToBottom();
         
-        // تحقق من حالة زر النزول بعد إضافة المؤشر
         setTimeout(toggleScrollButton, 100);
         return indicator;
     }
@@ -575,11 +848,9 @@ window.onload = () => {
         moreBtn.className = "more-btn Wave-cloud";
 
         moreBtn.onclick = () => {
-            // إزالة الزر فور النقر عليه
             if (buttonDiv.parentElement) {
                 buttonDiv.remove();
             }
-            // تنفيذ الإجراء المطلوب
             onClick();
         };
 
@@ -587,7 +858,6 @@ window.onload = () => {
         messagesDiv.appendChild(buttonDiv);
         scrollToBottom();
         
-        // تحقق من حالة زر النزول بعد إضافة الزر
         setTimeout(toggleScrollButton, 100);
         
         return buttonDiv;
@@ -598,32 +868,200 @@ window.onload = () => {
         const chunks = splitTextIntoChunks(answerText, 220);
         let currentIndex = 0;
         let buttonDiv = null;
+        let currentMessage = null;
+        let currentWrapper = null;
 
         function showNextChunk() {
             if (currentIndex < chunks.length) {
-                // إضافة border-top-left-radius للجزء الأول فقط
                 const isFirstChunk = (currentIndex === 0);
+                const hasMoreParts = (currentIndex < chunks.length - 1);
                 
-                // إضافة الرسالة مع دالة اكتمال
-                addBotMessageWithTyping(chunks[currentIndex], true, isFirstChunk, () => {
-                    // بعد اكتمال عرض الرسالة، تحقق إذا كان هناك المزيد
-                    currentIndex++;
+                // إذا كانت هذه هي المرة الأولى، أنشئ رسالة جديدة
+                if (isFirstChunk) {
+                    currentMessage = addBotMessageWithTyping(chunks[currentIndex], true, isFirstChunk, () => {
+                        currentIndex++;
+                        
+                        if (currentIndex < chunks.length) {
+                            setTimeout(() => {
+                                buttonDiv = createMoreButton(showNextChunk);
+                            }, 300);
+                        } else {
+                            // إظهار الأزرار عند اكتمال جميع الأجزاء
+                            if (currentWrapper) {
+                                const chatDiv = currentWrapper.querySelector('.chat-div');
+                                if (chatDiv) {
+                                    chatDiv.classList.add('show');
+                                }
+                            }
+                            saveMessages();
+                        }
+                    }, hasMoreParts);
                     
-                    if (currentIndex < chunks.length) {
-                        // إنشاء زر جلب المزيد بعد اكتمال الرسالة
-                        setTimeout(() => {
-                            buttonDiv = createMoreButton(showNextChunk);
-                        }, 300);
-                    } else {
-                        // لا توجد أجزاء أخرى، حفظ الرسائل
-                        saveMessages();
-                    }
-                });
+                    // الحصول على الـ wrapper الحالي
+                    currentWrapper = currentMessage.closest('.bot-message-wrapper');
+                } else {
+                    // إذا كانت رسالة موجودة بالفعل، أضف النص إليها
+                    const textToAdd = chunks[currentIndex];
+                    const hasMoreParts = (currentIndex < chunks.length - 1);
+                    
+                    // استخدم تأثير الكتابة لإضافة النص إلى الرسالة الحالية
+                    addTextToExistingMessage(currentMessage, textToAdd, () => {
+                        currentIndex++;
+                        
+                        if (currentIndex < chunks.length) {
+                            setTimeout(() => {
+                                buttonDiv = createMoreButton(showNextChunk);
+                            }, 300);
+                        } else {
+                            // إظهار الأزرار عند اكتمال جميع الأجزاء
+                            if (currentWrapper) {
+                                const chatDiv = currentWrapper.querySelector('.chat-div');
+                                if (chatDiv) {
+                                    chatDiv.classList.add('show');
+                                }
+                            }
+                            saveMessages();
+                        }
+                    }, hasMoreParts);
+                }
             }
         }
 
         // بدء عرض الجزء الأول
         showNextChunk();
+    }
+
+    // ======== إضافة نص إلى رسالة موجودة ========
+    function addTextToExistingMessage(messageElement, text, onComplete = null, hasMoreParts = false) {
+        let currentIndex = 0;
+        const typingSpeed = 20;
+        let spinnerShown = false;
+        let isInsideParentheses = false;
+        let currentParenthesesContent = '';
+        let isInsideImageTag = false;
+        let currentImageTag = '';
+        
+        function typeCharacter() {
+            if (currentIndex < text.length) {
+                const currentChar = text[currentIndex];
+                
+                // إظهار spinner عند بدء الكتابة
+                if (!spinnerShown && typingInProgress) {
+                    showSpinner();
+                    spinnerShown = true;
+                }
+                
+                if (currentChar === '<' && text.substring(currentIndex, currentIndex + 4).toLowerCase() === '<img') {
+                    isInsideImageTag = true;
+                    currentImageTag = '';
+                }
+                
+                if (isInsideImageTag) {
+                    currentImageTag += currentChar;
+                    
+                    if (currentChar === '>') {
+                        isInsideImageTag = false;
+                        
+                        const processedImage = processTextWithImages(currentImageTag);
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = processedImage;
+                        
+                        while (tempDiv.firstChild) {
+                            messageElement.appendChild(tempDiv.firstChild);
+                        }
+                        
+                        const images = messageElement.querySelectorAll('.message-image');
+                        images.forEach(img => {
+                            img.addEventListener('load', () => {
+                                const container = img.closest('.message-image-container');
+                                const loading = container.querySelector('.image-loading');
+                                if (loading) {
+                                    loading.style.display = 'none';
+                                }
+                                img.style.display = 'block';
+                                setTimeout(toggleScrollButton, 100);
+                            });
+                            
+                            img.addEventListener('error', () => {
+                                const container = img.closest('.message-image-container');
+                                const loading = container.querySelector('.image-loading');
+                                if (loading) {
+                                    loading.textContent = 'فشل تحميل الصورة';
+                                    loading.style.color = '#e53e3e';
+                                }
+                            });
+                        });
+                        
+                        currentImageTag = '';
+                    }
+                } else if (!isInsideImageTag) {
+                    if (currentChar === '(') {
+                        isInsideParentheses = true;
+                        currentParenthesesContent = '';
+                    }
+                    
+                    if (isInsideParentheses) {
+                        currentParenthesesContent += currentChar;
+                        
+                        if (currentChar === ')') {
+                            isInsideParentheses = false;
+                            
+                            const imageSpan = document.createElement('span');
+                            imageSpan.textContent = currentParenthesesContent;
+                            imageSpan.style.color = 'rgb(120, 126, 232)';
+                            imageSpan.style.fontWeight = 'bold';
+                            imageSpan.style.backgroundColor = '#fff';
+                            imageSpan.style.padding = '2px 6px';
+                            imageSpan.style.borderRadius = '4px';
+                            imageSpan.style.margin = '0 2px';
+                            imageSpan.style.fontSize = '0.9em';
+                            
+                            messageElement.appendChild(imageSpan);
+                            currentParenthesesContent = '';
+                        }
+                    } else {
+                        if (currentChar !== ')') {
+                            const textNode = document.createTextNode(currentChar);
+                            messageElement.appendChild(textNode);
+                        }
+                    }
+                }
+                
+                currentIndex++;
+                
+                scrollToBottom();
+                
+                setTimeout(typeCharacter, typingSpeed);
+            } else {
+                saveMessages();
+                
+                setTimeout(toggleScrollButton, 100);
+                
+                // إخفاء spinner عند اكتمال الكتابة
+                if (spinnerShown) {
+                    hideSpinner();
+                }
+                
+                // إظهار الأزرار فقط إذا لم يكن هناك أجزاء باقية
+                if (!hasMoreParts) {
+                    const wrapper = messageElement.closest('.bot-message-wrapper');
+                    if (wrapper) {
+                        const chatDiv = wrapper.querySelector('.chat-div');
+                        if (chatDiv) {
+                            chatDiv.classList.add('show');
+                        }
+                    }
+                }
+                
+                if (onComplete) onComplete();
+            }
+        }
+        
+        // تعيين حالة الكتابة كجارية
+        typingInProgress = true;
+        setTimeout(() => {
+            typeCharacter();
+        }, 100);
     }
 
     // ======== استخراج مقتطف من النص حول الكلمة المطلوبة ========
@@ -681,6 +1119,7 @@ window.onload = () => {
                 let matchScore = 0;
                 let foundWords = [];
                 
+                // البحث في النص العادي
                 searchWords.forEach(word => {
                     if (ayahText.includes(word)) {
                         matchScore += word.length;
@@ -692,6 +1131,20 @@ window.onload = () => {
                     }
                 });
                 
+                // البحث داخل الأقواس () بشكل منفصل
+                const parenthesesContent = ayahPart.match(/\(([^)]+)\)/g) || [];
+                parenthesesContent.forEach(parenthesesText => {
+                    const cleanParenthesesText = parenthesesText.toLowerCase();
+                    searchWords.forEach(word => {
+                        if (cleanParenthesesText.includes(word)) {
+                            matchScore += word.length * 2; // زيادة الوزن للبحث داخل الأقواس
+                            if (!foundWords.includes(word)) {
+                                foundWords.push(word);
+                            }
+                        }
+                    });
+                });
+                
                 if (matchScore > 0) {
                     const ayahMatch = ayahPart.match(/^(\d+)\./);
                     const ayahNumber = ayahMatch ? ayahMatch[1] : '1';
@@ -699,7 +1152,6 @@ window.onload = () => {
                     const imageParts = extractImageParts(ayahPart);
                     const searchSnippets = extractTextAroundSearch(ayahPart, searchWords, 8);
                     
-                    // استخراج النص الأساسي للآية (بدون رقم الآية)
                     const ayahContent = ayahPart.replace(/^\d+\.\s*/, '').trim();
                     
                     results.push({
@@ -712,18 +1164,16 @@ window.onload = () => {
                         searchWords: foundWords,
                         imageParts: imageParts,
                         searchSnippets: searchSnippets,
-                        ayahContent: ayahContent // إضافة النص الأساسي للكشف عن التكرار
+                        ayahContent: ayahContent
                     });
                 }
             });
         });
 
-        // تصفية النتائج المكررة بناءً على محتوى الآية
         const uniqueResults = [];
         const seenContents = new Set();
         
         results.sort((a, b) => b.score - a.score).forEach(result => {
-            // إنشاء مفتوح فريد بناءً على السورة والآية والمحتوى الأساسي
             const contentKey = `${result.surah}-${result.ayah}-${result.ayahContent.substring(0, 50)}`;
             
             if (!seenContents.has(contentKey)) {
@@ -747,19 +1197,15 @@ window.onload = () => {
 
         let filtered = [];
 
-        // البحث التقليدي في الأسئلة أولاً
         const traditionalResults = getAllSuggestions().filter(item =>
             item.q.toLowerCase().includes(value.toLowerCase())
         ).slice(0, 2);
 
         filtered.push(...traditionalResults);
 
-        // البحث النصي في المحتوى مع المقتطفات
         const textSearchResults = searchInAllAnswers(value);
         
-        // إضافة النتائج النصية مع تجنب التكرار
         textSearchResults.forEach(result => {
-            // التحقق من عدم وجود نتيجة مكررة بناءً على نص الآية
             const isDuplicate = filtered.some(item => 
                 item.q === result.q || 
                 (item.a && result.a && item.a.substring(0, 100) === result.a.substring(0, 100))
@@ -773,7 +1219,6 @@ window.onload = () => {
             }
         });
 
-        // إزالة التكرارات والحد إلى 6 نتائج فقط
         const seenTitles = new Set();
         filtered = filtered.filter(item => {
             if (seenTitles.has(item.q)) {
@@ -805,12 +1250,11 @@ window.onload = () => {
                     title.style.color = '#1a365d';
                     
                     if (item.searchSnippets && item.searchSnippets.length > 0) {
-                        // عرض المقتطفات الفريدة فقط
                         const uniqueSnippets = [];
                         const seenSnippets = new Set();
                         
                         item.searchSnippets.forEach(snippet => {
-                            const normalizedSnippet = snippet.substring(0, 80); // تقليل طول المقتطف للكشف عن التكرار
+                            const normalizedSnippet = snippet.substring(0, 80);
                             if (!seenSnippets.has(normalizedSnippet)) {
                                 seenSnippets.add(normalizedSnippet);
                                 uniqueSnippets.push(snippet);
@@ -881,7 +1325,6 @@ window.onload = () => {
                 btn.addEventListener('click', () => {
                     searchInput.value = item.q;
                     handleQuestion(item);
-                    // إزالة الفوكس من خانة البحث عند النقر على نتيجة
                     searchInput.blur();
                 });
                 
@@ -980,11 +1423,9 @@ window.onload = () => {
         if (textSearchResults.length > 0) {
             let resultText = `🔍 نتائج البحث عن: " ${userText} "\n\n`;
             
-            // استخدام Set لمنع تكرار النتائج
             const seenResults = new Set();
             
             textSearchResults.forEach((result, index) => {
-                // إنشاء مفتاح فريد للنتيجة
                 const resultKey = `${result.surah}-${result.ayah}-${result.matchedText.substring(0, 50)}`;
                 
                 if (!seenResults.has(resultKey)) {
@@ -1034,10 +1475,15 @@ window.onload = () => {
 
     // ======== معالجة السؤال ========
     function handleQuestion(itemOrText) {
+        if (isProcessingQuestion) return;
+        
         document.querySelectorAll('.more-btn').forEach(btn => {
             const container = btn.closest('div');
             if (container) container.remove();
         });
+
+        // إظهار spinner
+        showSpinner();
 
         let userQuestion = "";
         let answer = "";
@@ -1049,14 +1495,23 @@ window.onload = () => {
             addMessage(userQuestion, 'user');
 
             if (answer === null) {
-                addBotMessageWithTyping(`لم أجد تفسيراً يتطابق مع " ${userQuestion} ". حاول البحث بكلمات أخرى أو اكتب: إسم سورة , كلمة من سورة , جزئ من آية او أي كلمة وانا سأبحث لك عنها`);
+                setTimeout(() => {
+                    addBotMessageWithTyping(`لم أجد تفسيراً يتطابق مع " ${userQuestion} ". حاول البحث بكلمات أخرى أو اكتب: إسم سورة , كلمة من سورة , جزئ من آية او أي كلمة وانا سأبحث لك عنها`);
+                    hideSpinner();
+                }, 500);
                 return;
             }
 
             if (answer.length > 200) {
-                showLongAnswer(answer);
+                setTimeout(() => {
+                    showLongAnswer(answer);
+                    hideSpinner();
+                }, 500);
             } else {
-                addBotMessageWithTyping(answer);
+                setTimeout(() => {
+                    addBotMessageWithTyping(answer);
+                    hideSpinner();
+                }, 500);
             }
 
             return;
@@ -1072,6 +1527,7 @@ window.onload = () => {
 
             if (!item.a || item.a.trim() === "") {
                 addBotMessageWithTyping("نحن نعمل على هذا الجزء، سيتم إضافة الإجابة قريباً.");
+                hideSpinner();
                 return;
             }
 
@@ -1080,13 +1536,14 @@ window.onload = () => {
             } else {
                 addBotMessageWithTyping(item.a);
             }
+            
+            hideSpinner();
 
         }, 800);
 
         searchInput.value = '';
         suggestionsDiv.innerHTML = '';
         suggestionsDiv.style.display = 'none';
-        // إزالة الفوكس من خانة البحث بعد معالجة السؤال
         searchInput.blur();
     }
 
@@ -1095,17 +1552,25 @@ window.onload = () => {
         if (confirm("هل تريد حقًا بدء محادثة جديدة؟ سيتم حذف جميع الرسائل الحالية.")) {
             messagesDiv.innerHTML = '';
             localStorage.removeItem('chatMessages');
+            // إخفاء زر النزول لأسفل عند بدء محادثة جديدة
+            scrollToBottomBtn.classList.remove('show');
             addBotMessageWithTyping("مرحباً! كيف يمكنني مساعدتك اليوم؟", false);
         }
     });
 
     // ======== إدخال وأسهم ========
     searchInput.addEventListener('input', (e) => {
+        if (isProcessingQuestion) return;
         isNavigatingWithArrows = false;
         updateSuggestions(e.target.value);
     });
 
     searchInput.addEventListener('keydown', (e) => {
+        if (isProcessingQuestion) {
+            e.preventDefault();
+            return;
+        }
+        
         const buttons = suggestionsDiv.querySelectorAll('.suggestion-btn');
         if (buttons.length === 0) return;
 
@@ -1140,14 +1605,12 @@ window.onload = () => {
                 suggestionsDiv.innerHTML = "";
                 suggestionsDiv.style.display = "none";
                 isNavigatingWithArrows = false;
-                // إزالة الفوكس من خانة البحث عند الضغط على Enter
                 searchInput.blur();
                 return;
             }
         } else if (e.key === "Escape") {
             suggestionsDiv.style.display = "none";
             isNavigatingWithArrows = false;
-            // إزالة الفوكس من خانة البحث عند الضغط على Escape
             searchInput.blur();
         } else {
             isNavigatingWithArrows = false;
@@ -1169,16 +1632,13 @@ window.onload = () => {
     }
     searchInput.focus();
     
-    // تمرير فوري إلى الأسفل بعد تحميل الصفحة بالكامل
     setTimeout(() => {
         scrollToBottomImmediate();
     }, 100);
     
-    // بدء التحميل البطيء للاقتراحات في الخلفية بعد تحميل الصفحة
     setTimeout(() => {
         generateAyahSuggestionsLazy();
     }, 1000);
 
-    // التحقق الأولي من حالة زر النزول لأسفل
     setTimeout(toggleScrollButton, 500);
 };
