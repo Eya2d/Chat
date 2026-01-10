@@ -332,8 +332,8 @@ body .message.user {
     position: sticky;
     z-index: 4;
     content: '';
-    background-color: #fff;
-    box-shadow: 0 0 8px 15px #f8f9ff;
+    /* background-color: #fff; */
+    box-shadow: 0 0 8px 15px #fff;
     top: 0;
     left: 0;
     display: block;
