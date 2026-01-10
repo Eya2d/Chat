@@ -287,6 +287,12 @@ body .message.user {
     transform: scaleX(1);
     transform-origin: left;
 }
+.search-box:focus-within .spinner2 {
+    margin: 8px 16px;
+}
+.spinner2 i {
+    display: flex;
+}
 .search-box input {
     padding: 14px;
     width: 100%;
@@ -295,6 +301,7 @@ body .message.user {
     font-size: 1rem;
     transition: all 0.3s;
     outline: none;
+    padding-left: 46px;
 }
 .search-box input:focus {
     border-color: #4e54c8;
@@ -820,7 +827,7 @@ body .txt-btn {
 
 .spinner {
     position: absolute;
-    z-index: 10;
+    z-index: 15;
     border: 3px solid rgb(237 236 255);
     border-radius: 50%;
     border-top: 3px solid #a4a9ff;
@@ -828,6 +835,7 @@ body .txt-btn {
     width: 28px;
     height: 28px;
     left: 0;
+    background-color: rgb(245 246 250);
     display: none;
     animation: spin 1s linear infinite;
     margin: 10px 16px;
@@ -835,6 +843,22 @@ body .txt-btn {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+.spinner2 {
+    transition: 0.3s ease;
+    width: 28px;
+    height: 28px;
+    position: absolute !important;
+    z-index: 10;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    border-radius: 50%;
+    align-items: center;
+    font-size: 22px;
+    color: #767ce8;
+    margin: 10px 16px;
 }
 
 
