@@ -903,7 +903,6 @@ hr {
 #page-loader {
   position: fixed;
   inset: 0;
-  /* background: #0f172a; */
   background: #f8f9ff;
   display: flex;
   align-items: center;
@@ -912,7 +911,6 @@ hr {
   transition: opacity .5s ease, visibility .5s ease;
 }
 
-/* عند الإخفاء */
 #page-loader.hide {
   opacity: 0;
   visibility: hidden;
@@ -933,14 +931,13 @@ hr {
 
 .heartbeat path {
   fill: none;
-  /* stroke: #22c55e; */
   stroke: #767ce8;
   stroke-width: 4;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-dasharray: 320;
   stroke-dashoffset: 320;
-  animation: beat 1.4s linear infinite;
+  animation: beat 1.4s linear forwards;
 }
 
 @keyframes beat {
