@@ -56,15 +56,15 @@ window.onload = () => {
         
         if (message.classList.contains('collapsed')) {
             // إرجاع الرسالة إلى طولها الأصلي (Long)
-            message.classList.remove('collapsed');
+            message.classList.remove('collapsed Wave-cloud');
             message.style.maxHeight = 'none';
             icon.setAttribute('name', 'reorder-three-outline');
             textSpan.textContent = 'Short';
         } else {
-            // تقليص الرسالة إلى النصف (Short)
+            // تقليص الرسالة إلى 70% من ارتفاعها (تظهر 70% فقط)
             message.classList.add('collapsed');
             const currentHeight = message.scrollHeight;
-            message.style.maxHeight = (currentHeight / 2) + 'px';
+            message.style.maxHeight = (currentHeight * 0.6) + 'px'; // 70% من الارتفاع
             icon.setAttribute('name', 'reorder-four-outline');
             textSpan.textContent = 'Long';
         }
@@ -73,16 +73,60 @@ window.onload = () => {
     // ======== تطبيق الوضع الافتراضي (Short) على الرسالة ========
     function applyDefaultShortState(messageElement, txtBtn) {
         if (messageElement && txtBtn) {
-            // جعل الرسالة في وضع Short (تقليص)
+            // جعل الرسالة في وضع Short (تظهر 70% فقط)
             messageElement.classList.add('collapsed');
             const currentHeight = messageElement.scrollHeight;
-            messageElement.style.maxHeight = (currentHeight / 2) + 'px';
+            messageElement.style.maxHeight = (currentHeight * 0.6) + 'px'; // 70% من الارتفاع
             
-            // تحديث زر txt-btn ليكون في وضع Long
+            // تحديث زر txt-btn ليكون في وضع Short (الزر الأول يظهر كـ Short)
             const icon = txtBtn.querySelector('ion-icon');
             const textSpan = txtBtn.querySelector('.btn-text');
             icon.setAttribute('name', 'reorder-four-outline');
-            textSpan.textContent = 'Long';
+            textSpan.textContent = 'Short';
+        }
+    }
+
+    // ======== إعادة ربط أحداث الرسائل المحفوظة ========
+    function rebindMessageEventsForWrapper(wrapper) {
+        const message = wrapper.querySelector('.message');
+        const copyBtn = wrapper.querySelector('.copy-btn');
+        const shareBtn = wrapper.querySelector('.share-btn');
+        const txtBtn = wrapper.querySelector('.txt-btn');
+        
+        if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+                const text = message.textContent || message.innerText;
+                navigator.clipboard.writeText(text).then(() => {
+                    changeCopyIcon(copyBtn);
+                }).catch(err => {
+                    console.error('فشل النسخ:', err);
+                });
+            });
+        }
+        
+        if (shareBtn) {
+            shareBtn.addEventListener('click', () => {
+                const text = message.textContent || message.innerText;
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'تفسير القرآن الكريم',
+                        text: text,
+                        url: window.location.href
+                    }).catch(err => {
+                        console.error('فشل المشاركة:', err);
+                    });
+                } else {
+                    navigator.clipboard.writeText(text).then(() => {
+                        console.log('تم نسخ النص للمشاركة');
+                    });
+                }
+            });
+        }
+        
+        if (txtBtn) {
+            txtBtn.addEventListener('click', () => {
+                toggleMessageHeight(txtBtn);
+            });
         }
     }
 
@@ -91,61 +135,25 @@ window.onload = () => {
         document.querySelectorAll('.bot-message-wrapper').forEach(wrapper => {
             const message = wrapper.querySelector('.message');
             const chatDiv = wrapper.querySelector('.chat-div');
-            const copyBtn = wrapper.querySelector('.copy-btn');
-            const shareBtn = wrapper.querySelector('.share-btn');
             const txtBtn = wrapper.querySelector('.txt-btn');
             
             if (message && chatDiv && !message.textContent.includes("مرحباً! كيف يمكنني مساعدتك اليوم؟")) {
                 chatDiv.classList.add('show');
                 
-                // إعادة ربط حدث النسخ
-                if (copyBtn) {
-                    copyBtn.addEventListener('click', () => {
-                        const text = message.textContent || message.innerText;
-                        navigator.clipboard.writeText(text).then(() => {
-                            changeCopyIcon(copyBtn);
-                        }).catch(err => {
-                            console.error('فشل النسخ:', err);
-                        });
-                    });
-                }
+                // إعادة ربط الأحداث باستخدام الدالة الجديدة
+                rebindMessageEventsForWrapper(wrapper);
                 
-                // إعادة ربط حدث المشاركة
-                if (shareBtn) {
-                    shareBtn.addEventListener('click', () => {
-                        const text = message.textContent || message.innerText;
-                        if (navigator.share) {
-                            navigator.share({
-                                title: 'تفسير القرآن الكريم',
-                                text: text,
-                                url: window.location.href
-                            }).catch(err => {
-                                console.error('فشل المشاركة:', err);
-                            });
-                        } else {
-                            navigator.clipboard.writeText(text).then(() => {
-                                console.log('تم نسخ النص للمشاركة');
-                            });
-                        }
-                    });
-                }
-                
-                // إعادة ربط حدث تبديل طول الرسالة
+                // تطبيق الوضع الافتراضي للرسائل الطويلة
                 if (txtBtn) {
-                    txtBtn.addEventListener('click', () => {
-                        toggleMessageHeight(txtBtn);
-                    });
-                    
-                    // إخفاء زر txt-btn إذا كانت الرسالة قصيرة (أقل من 15 سطر)
                     const lineHeight = parseInt(getComputedStyle(message).lineHeight);
                     const messageHeight = message.scrollHeight;
                     const numberOfLines = messageHeight / lineHeight;
                     
-                    if (numberOfLines < 15) {
-                        txtBtn.style.display = 'none';
-                    } else {
-                        // تطبيق الوضع الافتراضي (Short) للرسائل المحفوظة
+                    if (numberOfLines >= 15) {
+                        // تطبيق الوضع الافتراضي (70%) للرسائل المحفوظة
                         applyDefaultShortState(message, txtBtn);
+                    } else {
+                        txtBtn.style.display = 'none';
                     }
                 }
             }
@@ -362,6 +370,9 @@ window.onload = () => {
                     if (message && chatDiv && !message.textContent.includes("مرحباً! كيف يمكنني مساعدتك اليوم؟")) {
                         chatDiv.classList.add('show');
                         
+                        // إعادة ربط أحداث النسخ والمشاركة
+                        rebindMessageEventsForWrapper(wrapper);
+                        
                         // إخفاء زر txt-btn إذا كانت الرسالة قصيرة (أقل من 15 سطر)
                         if (txtBtn) {
                             const lineHeight = parseInt(getComputedStyle(message).lineHeight);
@@ -371,14 +382,12 @@ window.onload = () => {
                             if (numberOfLines < 15) {
                                 txtBtn.style.display = 'none';
                             } else {
-                                // تطبيق الوضع الافتراضي (Short) للرسائل المحفوظة
+                                // تطبيق الوضع الافتراضي (70%) للرسائل المحفوظة
                                 applyDefaultShortState(message, txtBtn);
                             }
                         }
                     }
                 });
-                
-                rebindMessageEvents();
             }, 100);
         }
     }
@@ -485,7 +494,7 @@ window.onload = () => {
                 return `<div class="bot-message-wrapper">
                     <div class="message bot new typing-message"></div>
                     <div class="chat-div Wave-all">
-                        <button class="txt-btn"><ion-icon name="reorder-four-outline"></ion-icon><span class="btn-text">Long</span></button>
+                        <button class="txt-btn"><ion-icon name="reorder-three-outline"></ion-icon><span class="btn-text">Short</span></button>
                         <button class="copy-btn"><ion-icon name="copy-outline"></ion-icon></button>
                         <button class="share-btn"><ion-icon name="share-social-outline"></ion-icon></button>
                     </div>
@@ -629,7 +638,7 @@ window.onload = () => {
                     if (numberOfLines < 15) {
                         txtBtn.style.display = 'none';
                     } else {
-                        // تطبيق الوضع الافتراضي (Short) للرسائل المحفوظة
+                        // تطبيق الوضع الافتراضي (70%) للرسائل المحفوظة
                         applyDefaultShortState(msg, txtBtn);
                     }
                 }
@@ -761,7 +770,7 @@ window.onload = () => {
                         const numberOfLines = messageHeight / lineHeight;
                         
                         if (hasMultipleParts && numberOfLines >= 15) {
-                            // تطبيق الوضع الافتراضي (Short) فور اكتمال الأجزاء
+                            // تطبيق الوضع الافتراضي (70%) فور اكتمال الأجزاء
                             applyDefaultShortState(msg, txtBtn);
                         } else {
                             // إخفاء زر txt-btn إذا كانت الرسالة قصيرة أو ليس لها أجزاء متعددة
