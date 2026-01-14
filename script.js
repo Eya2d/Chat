@@ -17,6 +17,22 @@ window.onload = () => {
     let isProcessingQuestion = false;
     let typingInProgress = false;
 
+    // ======== قائمة الرسائل الترحيبية المختلفة ========
+    const welcomeMessages = [
+        "مرحباً! كيف يمكنني مساعدتك اليوم؟",
+        "أهلاً وسهلاً! أنا هنا لمساعدتك في تفسير القرآن الكريم، ماذا تريد أن تعرف؟",
+        "السلام عليكم! مستعد للإجابة على أسئلتك حول تفسير القرآن، تفضل بسؤالك.",
+        "مرحباً بك في مساعد تفسير القرآن! أرجو كتابة سؤالك وسأجيبك بإذن الله.",
+        "أهلاً بك! أنا مساعدك في تفسير آيات القرآن الكريم، اسألني عن أي سورة أو آية.",
+        "السلام عليكم ورحمة الله وبركاته! كيف يمكنني خدمتك في تفسير القرآن اليوم؟"
+    ];
+
+    // ======== دالة للحصول على رسالة ترحيبية عشوائية ========
+    function getRandomWelcomeMessage() {
+        const randomIndex = Math.floor(Math.random() * welcomeMessages.length);
+        return welcomeMessages[randomIndex];
+    }
+
     // ======== دالة إظهار/إخفاء spinner ========
     function showSpinner() {
         spinner.style.display = 'flex';
@@ -56,7 +72,8 @@ window.onload = () => {
         
         if (message.classList.contains('collapsed')) {
             // إرجاع الرسالة إلى طولها الأصلي (Long)
-            message.classList.remove('collapsed Wave-cloud');
+            message.classList.remove('collapsed');
+            message.classList.remove('Wave-cloud');
             message.style.maxHeight = 'none';
             icon.setAttribute('name', 'reorder-three-outline');
             textSpan.textContent = 'Short';
@@ -82,7 +99,7 @@ window.onload = () => {
             const icon = txtBtn.querySelector('ion-icon');
             const textSpan = txtBtn.querySelector('.btn-text');
             icon.setAttribute('name', 'reorder-four-outline');
-            textSpan.textContent = 'Short';
+            textSpan.textContent = 'Long';
         }
     }
 
@@ -137,7 +154,7 @@ window.onload = () => {
             const chatDiv = wrapper.querySelector('.chat-div');
             const txtBtn = wrapper.querySelector('.txt-btn');
             
-            if (message && chatDiv && !message.textContent.includes("مرحباً! كيف يمكنني مساعدتك اليوم؟")) {
+            if (message && chatDiv && !welcomeMessages.some(msg => message.textContent.includes(msg))) {
                 chatDiv.classList.add('show');
                 
                 // إعادة ربط الأحداث باستخدام الدالة الجديدة
@@ -367,7 +384,7 @@ window.onload = () => {
                     const chatDiv = wrapper.querySelector('.chat-div');
                     const txtBtn = wrapper.querySelector('.txt-btn');
                     
-                    if (message && chatDiv && !message.textContent.includes("مرحباً! كيف يمكنني مساعدتك اليوم؟")) {
+                    if (message && chatDiv && !welcomeMessages.some(msg => message.textContent.includes(msg))) {
                         chatDiv.classList.add('show');
                         
                         // إعادة ربط أحداث النسخ والمشاركة
@@ -513,8 +530,8 @@ window.onload = () => {
 
     // ======== إضافة رسالة البوت مع تأثير الكتابة حرفًا حرفًا ========
     function addBotMessageWithTyping(text, isNew = true, isFirstChunk = false, onComplete = null, hasMoreParts = false) {
-        // التحقق إذا كانت هذه الرسالة الترحيبية
-        const isWelcomeMessage = text.includes("مرحباً! كيف يمكنني مساعدتك اليوم؟");
+        // التحقق إذا كانت هذه رسالة ترحيبية
+        const isWelcomeMessage = welcomeMessages.some(msg => text.includes(msg));
         
         // تحديد إذا كانت الرسالة لها أجزاء متعددة (أطول من 200 حرف)
         const hasMultipleParts = text.length > 200;
@@ -1367,6 +1384,22 @@ window.onload = () => {
         }
     }
 
+    // ======== تمرير الاقتراح المحدد إلى العرض ========
+    function scrollSelectedIntoView() {
+        const buttons = suggestionsDiv.querySelectorAll('.suggestion-btn');
+        if (buttons.length > 0 && selectedIndex >= 0 && selectedIndex < buttons.length) {
+            const selectedButton = buttons[selectedIndex];
+            const suggestionItem = selectedButton.closest('.suggestion-item');
+            
+            if (suggestionItem) {
+                suggestionItem.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest'
+                });
+            }
+        }
+    }
+
     // ======== البحث الدقيق عن تفسير آية - محسن ========
     function findAyahTafsir(userText) {
         const patterns = [
@@ -1565,11 +1598,13 @@ window.onload = () => {
             localStorage.removeItem('chatMessages');
             // إخفاء زر النزول لأسفل عند بدء محادثة جديدة
             scrollToBottomBtn.classList.remove('show');
-            addBotMessageWithTyping("مرحباً! كيف يمكنني مساعدتك اليوم؟", false);
+            // إضافة رسالة ترحيبية عشوائية عند بدء محادثة جديدة
+            const randomWelcomeMessage = getRandomWelcomeMessage();
+            addBotMessageWithTyping(randomWelcomeMessage, false);
         }
     });
 
-    // ======== إدخال وأسهم ========
+    // ======== إدخال وأسهم مع التمرير للاقتراحات ========
     searchInput.addEventListener('input', (e) => {
         if (isProcessingQuestion) return;
         isNavigatingWithArrows = false;
@@ -1583,24 +1618,42 @@ window.onload = () => {
         }
         
         const buttons = suggestionsDiv.querySelectorAll('.suggestion-btn');
-        if (buttons.length === 0) return;
-
+        
         if (e.key === "ArrowDown") {
             e.preventDefault();
             isNavigatingWithArrows = true;
-            selectedIndex = (selectedIndex + 1) % buttons.length;
-            updateSelectedSuggestion();
+            
+            if (buttons.length > 0) {
+                selectedIndex = (selectedIndex + 1) % buttons.length;
+                updateSelectedSuggestion();
+                scrollSelectedIntoView();
+            } else {
+                // إذا لم تكن هناك اقتراحات، تحديث الاقتراحات بناءً على نص البحث
+                updateSuggestions(searchInput.value);
+                setTimeout(() => {
+                    const newButtons = suggestionsDiv.querySelectorAll('.suggestion-btn');
+                    if (newButtons.length > 0) {
+                        selectedIndex = 0;
+                        updateSelectedSuggestion();
+                        scrollSelectedIntoView();
+                    }
+                }, 50);
+            }
         } else if (e.key === "ArrowUp") {
             e.preventDefault();
             isNavigatingWithArrows = true;
-            selectedIndex = (selectedIndex - 1 + buttons.length) % buttons.length;
-            updateSelectedSuggestion();
+            
+            if (buttons.length > 0) {
+                selectedIndex = (selectedIndex - 1 + buttons.length) % buttons.length;
+                updateSelectedSuggestion();
+                scrollSelectedIntoView();
+            }
         } else if (e.key === "Enter") {
             e.preventDefault();
             if (searchInput.value.trim()) {
                 if (!isNavigatingWithArrows) {
                     handleQuestion(searchInput.value.trim());
-                } else {
+                } else if (buttons.length > 0) {
                     const selectedButton = buttons[selectedIndex];
                     const titleElement = selectedButton.querySelector('div:first-child');
                     const itemTitle = titleElement ? titleElement.textContent : selectedButton.textContent;
@@ -1611,7 +1664,10 @@ window.onload = () => {
                     } else {
                         handleQuestion(searchInput.value.trim());
                     }
+                } else {
+                    handleQuestion(searchInput.value.trim());
                 }
+                
                 searchInput.value = "";
                 suggestionsDiv.innerHTML = "";
                 suggestionsDiv.style.display = "none";
@@ -1639,7 +1695,8 @@ window.onload = () => {
     // ======== تحميل عند البداية ========
     loadMessages();
     if (!localStorage.getItem('chatMessages')) {
-        addBotMessageWithTyping("مرحباً! كيف يمكنني مساعدتك اليوم؟", false);
+        const randomWelcomeMessage = getRandomWelcomeMessage();
+        addBotMessageWithTyping(randomWelcomeMessage, false);
     }
     searchInput.focus();
     
