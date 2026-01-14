@@ -188,6 +188,7 @@ body .message.user {
 .message.user::after {
     position: absolute;
     content: '';
+    overflow: hidden;
     background-image: url(image/yo.png);
     background-size: cover;
     filter: hue-rotate(36deg);
@@ -214,6 +215,10 @@ body .message.user {
     margin-right: auto;
     border-radius: 18px;
     margin-left: 35px;
+    overflow: hidden;
+}
+.collapsed:active {
+    opacity: .7;
 }
 .collapsed {
     transition: ease 0.1s;
@@ -235,6 +240,7 @@ body .message.user {
 .bot-message-wrapper::after {
     position: absolute;
     content: '';
+    overflow: hidden;
     background-image: url(image/icon.png);
     background-size: cover;
     /* filter: hue-rotate(36deg); */
@@ -816,6 +822,7 @@ body .message.user {
 .chat-div button ion-icon {
     height: 20px;
     width: 20px;
+    overflow: hidden;
 }
 body .txt-btn {
     direction: ltr;
