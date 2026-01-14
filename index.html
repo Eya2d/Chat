@@ -87,7 +87,7 @@
 
     <!-- 🔥 Loader -->
 <div id="page-loader">
-  <div class="heartbeat">
+  <div class="heartbeat" style="text-align: center;">
     <svg viewBox="0 0 200 60">
       <path d="
         M0 30 
@@ -102,19 +102,19 @@
         L200 30
       "/>
     </svg>
+    <span>جارِ التحميل...</span>
   </div>
 </div>
 
 
 <script>
-/* ======================
-   إخفاء اللودر بعد التحميل الكامل
-====================== */
-window.addEventListener("load", () => {
-  const loader = document.getElementById("page-loader");
+const loader = document.getElementById("page-loader");
+const heartbeatPath = document.querySelector(".heartbeat path");
+
+heartbeatPath.addEventListener("animationend", () => {
   loader.classList.add("hide");
 
-  // إزالة العنصر نهائياً (اختياري)
+  // إزالة نهائية (اختياري)
   setTimeout(() => loader.remove(), 600);
 });
 </script>
