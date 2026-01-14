@@ -264,6 +264,7 @@ body .message.user {
 }
 .search-box {
     padding: 5px;
+    margin-bottom: 22px !important;
     background: #ffffff00;
     border-top: 1px solid #e2e8f000;
     display: flex;
@@ -947,3 +948,13 @@ hr {
 }
 }
 
+.tersaa-14a0 {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 12px;
+    opacity: .7;
+    padding: 3px 0;
+    color: #4d616f;
+}
