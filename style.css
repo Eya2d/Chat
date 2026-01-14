@@ -922,6 +922,7 @@ hr {
 .heartbeat {
   width: 220px;
   height: 70px;
+  margin-bottom: 10px;
 }
 
 .heartbeat svg {
@@ -933,15 +934,16 @@ hr {
   fill: none;
   stroke: #767ce8;
   stroke-width: 4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  stroke-linecap: round;   /* حواف ناعمة للنهايات */
+  stroke-linejoin: round;  /* حواف ناعمة للزوايا */
   stroke-dasharray: 320;
   stroke-dashoffset: 320;
-  animation: beat 1.4s linear forwards;
+  animation: beat 1.4s linear forwards; /* دورة واحدة فقط */
 }
 
 @keyframes beat {
   to {
     stroke-dashoffset: 0;
-  }
 }
+}
+
