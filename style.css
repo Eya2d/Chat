@@ -219,6 +219,7 @@ body .message.user {
 }
 .collapsed:active {
     opacity: .7;
+    transform: scale(0.98);
 }
 .collapsed {
     transition: ease 0.1s;
