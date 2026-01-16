@@ -73,3 +73,68 @@ sidebar.addEventListener("touchmove", (e) => {
         closeSidebar();
     }
 });
+
+
+
+
+let currentBox = null;
+let pendingBoxId = null;
+let isAnimating = false;
+
+function openBox(id) {
+  if (currentBox) {
+    pendingBoxId = id;
+    closeBox();
+    return;
+  }
+  createBox(id);
+}
+
+function createBox(id) {
+  const template = document.getElementById(`${id}-content`);
+  const clone = template.cloneNode(true);
+
+  clone.style.display = 'flex';
+  clone.className = 'box popup-enter';
+  clone.id = id;
+
+  document.body.appendChild(clone);
+
+  // 🔥 إعادة تشغيل الأنيميشن بالقوة
+  clone.getBoundingClientRect();
+
+  requestAnimationFrame(() => {
+    clone.classList.add('popup-enter-active');
+  });
+
+  currentBox = clone;
+  isAnimating = true;
+
+  clone.addEventListener('transitionend', () => {
+    isAnimating = false;
+  }, { once: true });
+}
+
+function closeBox() {
+  if (!currentBox) return;
+
+  // إذا كان ما زال في الدخول → أوقفه
+  currentBox.classList.remove('popup-enter-active');
+  currentBox.classList.remove('popup-enter');
+
+  // 🔥 Reflow
+  currentBox.getBoundingClientRect();
+
+  currentBox.classList.add('popup-exit');
+
+  currentBox.addEventListener('transitionend', () => {
+    currentBox.remove();
+    currentBox = null;
+
+    if (pendingBoxId) {
+      const next = pendingBoxId;
+      pendingBoxId = null;
+      createBox(next);
+    }
+  }, { once: true });
+}
