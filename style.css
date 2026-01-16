@@ -416,7 +416,7 @@ body .message.user {
         height: 36px;
     } */
     body button,a {
-        cursor: context-menu;
+        cursor: context-menu !important;
     }
 }
 
@@ -957,6 +957,7 @@ hr {
 
 .tersaa-14a0 {
     position: fixed;
+    user-select: none;
     transition: all 0.3s;
     z-index: 10000;
     bottom: 20px;
@@ -968,6 +969,7 @@ hr {
     color: #a0abb5;
 }
 .tersaa-14a0 a {
+    cursor: pointer;
     color: #767ce8;
     font-weight: 700;
 }
