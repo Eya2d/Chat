@@ -962,10 +962,16 @@ hr {
     width: 100%;
     text-align: center;
     font-size: 12px;
-    opacity: .7;
     padding: 3px 0;
-    color: #4d616f;
+    color: #a0abb5;
+}
+.tersaa-14a0 a {
+    color: #767ce8;
+    font-weight: 700;
+}
+.tersaa-14a0 a:hover {
+    color: #666bc7;
 }
 .coo .tersaa-14a0 {
-    bottom: 40px;
+    bottom: 35px;
 }
