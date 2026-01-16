@@ -50,7 +50,7 @@
             <div class="menu-div Wave-all">
                 <div class="newChatBtn"><label for="newChatBtn">محادثة جديدة</label></div>
                 <hr>
-                <div id="mychat"></div>
+                <div id="mychat" class="xoox"></div>
                 <!-- <input type="text" id="recoveryCode" readonly style="display: none;">
                 <a id="copyCodeBtn">نسخ رابط إستعادة المحادثه</a>
                 <a>العربية <ion-icon name="chevron-down-outline"></ion-icon></a>
@@ -59,8 +59,9 @@
                 <input type="text" id="verificationInput" placeholder="أدخل رابط الإستعاده"> -->
             </div>
         </div>
-        <div class="tersaa-14a0">إصدار 2، جميع الحقوق محفوظة لـ Quran recited AI</div>
+        
 </div>
+<div class="tersaa-14a0">إصدار 2، جميع الحقوق محفوظة لـ Quran recited AI</div>
 
 
 <!-- قائمة السياق -->
@@ -106,8 +107,17 @@
 <script>
 const loader = document.getElementById("page-loader");
 const heartbeatPath = document.querySelector(".heartbeat path");
+const body = document.body;
 
+// عند بداية الأنيميشن
+heartbeatPath.addEventListener("animationstart", () => {
+  body.classList.add("coo");
+});
+
+// عند نهاية الأنيميشن
 heartbeatPath.addEventListener("animationend", () => {
+  body.classList.remove("coo");
+
   loader.classList.add("hide");
 
   // إزالة نهائية (اختياري)
