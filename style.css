@@ -774,6 +774,9 @@ body .message.user {
     body .scr-top:active {
         background-color: #edecff;
     }
+    body .tersaa-14a0  {
+        bottom: 0;
+    }
 }
 
 .cccx {
@@ -904,6 +907,7 @@ hr {
 ====================== */
 #page-loader {
   position: fixed;
+  user-select: none;
   inset: 0;
   background: #f8f9ff;
   display: flex;
@@ -950,12 +954,18 @@ hr {
 }
 
 .tersaa-14a0 {
-    position: absolute;
-    bottom: 0;
+    position: fixed;
+    transition: all 0.3s;
+    z-index: 10000;
+    bottom: 20px;
+    left: 0;
     width: 100%;
     text-align: center;
     font-size: 12px;
     opacity: .7;
     padding: 3px 0;
     color: #4d616f;
+}
+.coo .tersaa-14a0 {
+    bottom: 40px;
 }
