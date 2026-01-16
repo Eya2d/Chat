@@ -837,20 +837,22 @@ body .txt-btn {
     margin-right: 5px;
 }
 
-.spinner {
+.spinner-div {
     position: absolute;
     z-index: 15;
+    margin: 10px 16px;
+    left: 0;
+}
+.spinner {
     border: 3px solid rgb(237 236 255);
     border-radius: 50%;
     border-top: 3px solid #a4a9ff;
     border-width: 3px;
     width: 28px;
     height: 28px;
-    left: 0;
     background-color: rgb(245 246 250);
     display: none;
     animation: spin 1s linear infinite;
-    margin: 10px 16px;
 }
 @keyframes spin {
     0% { transform: rotate(0deg); }
