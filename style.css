@@ -787,6 +787,12 @@ body .message.user {
     #box2 .box1, #box3 .box1, #box4 .box1 {
         font-size: 14px !important;
     }
+    .box1 a:hover ion-icon {
+        margin-left: 0 !important;
+    }
+    .box1 a:active ion-icon {
+        margin-left: -5px !important;
+    }
 }
 
 .cccx {
