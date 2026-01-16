@@ -969,7 +969,7 @@ hr {
     position: fixed;
     user-select: none;
     transition: all 0.3s;
-    z-index: 10000;
+    z-index: 11100;
     bottom: 20px;
     left: 0;
     width: 100%;
@@ -997,7 +997,7 @@ hr {
 /* name */
 .box {
     position: fixed;
-    z-index: 11000;
+    z-index: 11200;
     top: 0;
     bottom: 0;
     background-color: #f8f9ff;
