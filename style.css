@@ -856,8 +856,13 @@ body .txt-btn {
 .spinner-div {
     position: absolute;
     z-index: 15;
-    margin: 10px 16px;
+    margin: 7px 13px;
     left: 0;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .spinner {
     border: 3px solid rgb(237 236 255);
