@@ -732,6 +732,9 @@ body .message.user {
         height: 100%;
         border-radius: 0;
     }
+    .box {
+        margin: 0 !important;
+    }
     
     .messages {
         max-height: initial;
@@ -780,6 +783,9 @@ body .message.user {
     }
     .search-box input {
         font-size: 0.9rem !important;
+    }
+    #box2 .box1, #box3 .box1, #box4 .box1 {
+        font-size: 14px !important;
     }
 }
 
@@ -919,7 +925,7 @@ hr {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 10000;
   transition: opacity .5s ease, visibility .5s ease;
 }
 
@@ -982,4 +988,84 @@ hr {
 }
 .coo .tersaa-14a0 {
     bottom: 35px;
+}
+.span_color {
+
+}
+
+
+/* name */
+.box {
+    position: fixed;
+    z-index: 11000;
+    top: 0;
+    bottom: 0;
+    background-color: #f8f9ff;
+    width: 580px;
+    max-width: -webkit-fill-available;
+    margin: 20px;
+    border-radius: 20px;
+    display: none;
+    flex-direction: column;
+}
+
+/* دخول */
+.popup-enter {
+  opacity: 0;
+  transform: scale(0.7) translateY(40px);
+}
+
+.popup-enter-active {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* خروج */
+.popup-exit {
+  opacity: 0;
+  transform: scale(0.7) translateY(40px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.name {
+    margin: 16px 0;
+    padding: 0 16px;
+    display: flex;
+    justify-content: space-between;
+    height: 36px;
+    user-select: none;
+}
+.box1 a {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 50px;
+    font-size: 15px;
+    padding: 0 16px;
+    color: #495a69;
+}
+.box1 a ion-icon {
+    transition: all 0.2s;
+    width: 36px;
+}
+.box1 a:hover ion-icon {
+    margin-left: -5px;
+}
+#box2, #box3 {
+    
+} 
+#box2 .box1, #box3 .box1, #box4 .box1 {
+    padding: 0 16px;
+    flex-grow: 1;
+    padding-bottom: 60px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    line-height: 1.3;
+}
+#box2 .box1 hr, #box3 .box1 hr, #box4 .box1 hr {
+    margin-bottom: 12px;
+    background: #0000;
 }
