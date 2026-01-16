@@ -302,7 +302,8 @@ body .message.user {
     display: flex;
 }
 .search-box input {
-    padding: 14px;
+    padding: 0 14px;
+    height: 48px;
     width: 100%;
     border-radius: 30px;
     border: 1px solid #cbd5e0;
@@ -776,6 +777,9 @@ body .message.user {
     }
     body .tersaa-14a0  {
         bottom: 0;
+    }
+    .search-box input {
+        font-size: 0.9rem !important;
     }
 }
 
