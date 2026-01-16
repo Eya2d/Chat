@@ -44,7 +44,7 @@ window.onload = () => {
     function hideSpinner() {
         spinner.style.display = 'none';
         searchInput.disabled = false;
-        searchInput.placeholder = 'اكتب سؤالك عن تفسير القرآن...';
+        searchInput.placeholder = 'اكتب سؤالك هنا...';
         isProcessingQuestion = false;
         typingInProgress = false;
     }
