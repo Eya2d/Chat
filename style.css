@@ -784,7 +784,7 @@ body .message.user {
     .search-box input {
         font-size: 0.9rem !important;
     }
-    #box2 .box1, #box3 .box1, #box4 .box1 {
+    #box2 .box1, #box3 .box1, #box4 .box1, #box5 .box1 {
         font-size: 14px !important;
     }
     .box1 a:hover ion-icon {
@@ -803,6 +803,13 @@ body .message.user {
     .box1 a:active ion-icon {
         transition: all 0.2s;
         opacity: 1 !important;
+    }
+    .share {
+        text-align: center;
+    }
+    .share button {
+        width: 100% !important;
+        max-width: 100% !important;
     }
 }
 
@@ -1086,7 +1093,7 @@ hr {
 #box2, #box3 {
     
 } 
-#box2 .box1, #box3 .box1, #box4 .box1 {
+#box2 .box1, #box3 .box1, #box4 .box1, #box5 .box1 {
     padding: 0 16px;
     flex-grow: 1;
     padding-bottom: 60px;
@@ -1094,7 +1101,31 @@ hr {
     scrollbar-width: thin;
     line-height: 1.3;
 }
-#box2 .box1 hr, #box3 .box1 hr, #box4 .box1 hr {
+#box2 .box1 hr, #box3 .box1 hr, #box4 .box1 hr, #box5 .box1 hr {
     margin-bottom: 12px;
     background: #0000;
+}
+.share {
+    padding-top: 10px;
+    text-align: center;
+}
+.share button {
+    display: inline-flex;
+    padding: 8px 0;
+    border-radius: 25px;
+    margin-bottom: 8px !important;
+    border: none;
+    width: 100%;
+    max-width: 70%;
+    margin: auto;
+    font-size: 14px;
+    font-family: 'Cairo', sans-serif;
+}
+.share button ion-icon {
+    margin-right: 8px;
+    height: 20px;
+    width: 20px;
+}
+.share button .ripple {
+    background-color: rgba(255, 255, 255, 0.199);
 }
