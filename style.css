@@ -792,6 +792,17 @@ body .message.user {
     }
     .box1 a:active ion-icon {
         margin-left: -5px !important;
+        transition: all 0.2s;
+        margin-left: -5px;
+        opacity: 1;
+    }
+    .box1 a:hover ion-icon {
+        transition: all 0.4s;
+        opacity: .5 !important;
+    }
+    .box1 a:active ion-icon {
+        transition: all 0.2s;
+        opacity: 1 !important;
     }
 }
 
