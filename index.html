@@ -14,7 +14,7 @@
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/Eya2d/Wave-cloud/wave-cloud.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/IconCanyon/My-library@main/Focus-on-HTML-1.3.0.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/IconCanyon/Icon-canyon@main/share-6.12.0.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/IconCanyon/Icon-canyon@main/share-7.12.0.js"></script>
 
 </head>
 <body>
@@ -259,11 +259,20 @@ heartbeatPath.addEventListener("animationend", () => {
 
 
 <script>
-    Share.save({
+Share.save({
   phone: "966597530810",
   email: "iconcanyon@gmail.com",
   url: "https://chat-rp1c.vercel.app/",
-  text: "مرحبا إياد"
+  text: "مرحبا إياد",
+
+  onAll: "", // Enable all sharing options by writing "on"
+  offAll: "", // Remove unsupported options by writing "on"
+    
+  // Customizable content
+  shareBtnText: "إرسال",
+  closeBtnText: "إغلاق",
+  direction: "rtl", // ← Direction from left to right
+  placeholder: "اكتب رسالتك هنا..." //Write your message here...
 });
 </script>
 
