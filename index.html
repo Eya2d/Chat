@@ -328,6 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function adjustBodyForKeyboard() {
         let viewportHeight = window.innerHeight;
 
+        // استخدام visualViewport إن كان متاح
         if (window.visualViewport) {
             viewportHeight = window.visualViewport.height;
         }
@@ -336,22 +337,16 @@ document.addEventListener('DOMContentLoaded', () => {
             // الكيبورد ظاهر
             if (!isKeyboardVisible) {
                 isKeyboardVisible = true;
-                body.style.position = 'fixed';
-                body.style.top = '0';
-                body.style.left = '0';
-                body.style.width = '100%';
                 body.style.height = viewportHeight + 'px';
+                body.style.maxHeight = viewportHeight + 'px';
                 body.style.overflow = 'hidden';
             }
         } else {
             // الكيبورد مخفي
             if (isKeyboardVisible) {
                 isKeyboardVisible = false;
-                body.style.position = '';
-                body.style.top = '';
-                body.style.left = '';
-                body.style.width = '';
                 body.style.height = '';
+                body.style.maxHeight = '';
                 body.style.overflow = '';
                 baseHeight = viewportHeight; // تحديث الارتفاع الأساسي
             }
