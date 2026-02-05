@@ -416,9 +416,13 @@ window.onload = () => {
             // إضافة المحتوى المحفوظ مباشرة إلى DOM
             messagesDiv.innerHTML = saved;
             
+            // التأكد من أن الرسائل تظهر في الأسفل
             setTimeout(() => {
                 scrollToBottomImmediate();
             }, 50);
+            setTimeout(() => {
+                scrollToBottomImmediate();
+            }, 200);
             setTimeout(toggleScrollButton, 100);
             
             // إعادة ربط الأحداث للرسائل المحفوظة وتطبيق الوضع الافتراضي (Short)
@@ -1754,9 +1758,15 @@ window.onload = () => {
     }
     searchInput.focus();
     
+    // التأكد من أن الرسائل تظهر في الأسفل عند التحميل
     setTimeout(() => {
         scrollToBottomImmediate();
     }, 100);
+    
+    // التأكد مرة أخرى بعد فترة قصيرة
+    setTimeout(() => {
+        scrollToBottomImmediate();
+    }, 300);
     
     setTimeout(() => {
         generateAyahSuggestionsLazy();
