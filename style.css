@@ -19,6 +19,9 @@ body {
     height: 100dvh;  
     padding: 20px;
 }
+button,select,a,input,span {
+    outline-color: #767ce8;
+}
 button {
     cursor: pointer;
     user-select: none;
@@ -573,7 +576,7 @@ body .message.user {
 
 .menu {
     position: absolute;
-    z-index: 150;
+    z-index: 11200;
     left: -261px; /* مخفية */
     top: 0;
     opacity: 0;
@@ -767,6 +770,9 @@ body .message.user {
         height: 0px;
         width: 100%;
     }
+    .menu {
+        position: fixed;
+    }
     .menu-div a, .menu-div label {
         cursor: context-menu;
     }
@@ -785,7 +791,7 @@ body .message.user {
     .search-box input {
         font-size: 0.9rem !important;
     }
-    #box2 .box1, #box3 .box1, #box4 .box1, #box5 .box1 {
+    #box2 .box1, #box3 .box1, #box4 .box1, #box5 .box1, #messagePreviewModal .box1 {
         font-size: 14px !important;
     }
     .box1 a:hover ion-icon {
@@ -879,7 +885,7 @@ body .txt-btn {
     left: 0;
     width: 34px;
     height: 34px;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
 }
@@ -891,7 +897,6 @@ body .txt-btn {
     width: 28px;
     height: 28px;
     background-color: rgb(245 246 250);
-    display: none;
     animation: spin 1s linear infinite;
 }
 @keyframes spin {
@@ -1075,8 +1080,10 @@ hr {
     justify-content: space-between;
     height: 50px;
     font-size: 15px;
-    padding: 0 16px;
+    padding: 0 11px;
     color: #495a69;
+    margin: 0 5px;
+    border-radius: 8px;
 }
 .box1 a ion-icon {
     transition: all 0.4s;
@@ -1094,13 +1101,17 @@ hr {
 #box2, #box3 {
     
 } 
-#box2 .box1, #box3 .box1, #box4 .box1, #box5 .box1 {
+#box2 .box1, #box3 .box1, #box4 .box1, #box5 .box1, #messagePreviewModal .box1 {
     padding: 0 16px;
     flex-grow: 1;
     padding-bottom: 60px;
     overflow-y: auto;
     scrollbar-width: thin;
     line-height: 1.3;
+}
+#messagePreviewModal .box1 {
+    line-height: initial !important;
+    user-select: text;
 }
 #box2 .box1 hr, #box3 .box1 hr, #box4 .box1 hr, #box5 .box1 hr {
     margin-bottom: 12px;
@@ -1130,3 +1141,6 @@ hr {
 .share button .ripple {
     background-color: rgba(255, 255, 255, 0.199);
 }
+
+
+
