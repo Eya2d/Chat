@@ -322,37 +322,47 @@ Share.save({
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const app = document.getElementById('app');
+
     const body = document.body;
     let baseHeight = window.innerHeight;
+    let isKeyboardVisible = false;
 
-    function adjustForKeyboard() {
-        let vh = window.innerHeight;
-        if (window.visualViewport) vh = window.visualViewport.height;
+    function adjustBodyForKeyboard() {
+        let viewportHeight = window.innerHeight;
 
-        if (vh < baseHeight) {
+        if (window.visualViewport) {
+            viewportHeight = window.visualViewport.height;
+        }
+
+        if (viewportHeight < baseHeight) {
             // الكيبورد ظاهر
-            body.style.overflow = 'hidden';
-            app.style.position = 'absolute';
-            app.style.top = '0';
-            app.style.left = '0';
-            app.style.width = '100%';
-            app.style.height = vh + 'px';
+            if (!isKeyboardVisible) {
+                isKeyboardVisible = true;
+                body.style.position = 'fixed';
+                body.style.top = '0';
+                body.style.left = '0';
+                body.style.width = '100%';
+                body.style.height = viewportHeight + 'px';
+                body.style.overflow = 'hidden';
+            }
         } else {
             // الكيبورد مخفي
-            body.style.overflow = '';
-            app.style.position = '';
-            app.style.top = '';
-            app.style.left = '';
-            app.style.width = '';
-            app.style.height = '';
-            baseHeight = vh;
+            if (isKeyboardVisible) {
+                isKeyboardVisible = false;
+                body.style.position = '';
+                body.style.top = '';
+                body.style.left = '';
+                body.style.width = '';
+                body.style.height = '';
+                body.style.overflow = '';
+                baseHeight = viewportHeight; // تحديث الارتفاع الأساسي
+            }
         }
     }
 
-    window.addEventListener('resize', adjustForKeyboard);
+    window.addEventListener('resize', adjustBodyForKeyboard);
     if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', adjustForKeyboard);
+        window.visualViewport.addEventListener('resize', adjustBodyForKeyboard);
     }
 });
 </script>
