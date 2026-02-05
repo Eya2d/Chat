@@ -1112,6 +1112,7 @@ hr {
 #messagePreviewModal .box1 {
     line-height: initial !important;
     user-select: text;
+    font-size: 16px !important;
 }
 #box2 .box1 hr, #box3 .box1 hr, #box4 .box1 hr, #box5 .box1 hr {
     margin-bottom: 12px;
