@@ -317,39 +317,106 @@ Share.save({
 
 
 
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* لمنع التمرير الزائد عند ظهور الكيبورد */
+    @media screen and (max-width: 768px) {
+        body.keyboard-visible {
+            touch-action: pan-y;
+        }
+    }
+</style>
+
+
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-
-    let baseHeight = window.innerHeight;
+    let initialViewportHeight = window.innerHeight;
+    let isKeyboardVisible = false;
+    let originalBodyHeight = document.body.scrollHeight;
 
     function adjustBodyHeight() {
-        let currentHeight = window.innerHeight;
-
-        // استخدام visualViewport إذا كان متوفر
-        if (window.visualViewport) {
-            currentHeight = window.visualViewport.height;
-        }
-
-        if (currentHeight < baseHeight) {
-            // الكيبورد ظاهر
-            document.body.style.height = currentHeight + 'px';
+        const currentHeight = window.innerHeight;
+        const visualHeight = window.visualViewport ? window.visualViewport.height : currentHeight;
+        
+        // تحديد ما إذا كانت لوحة المفاتيح ظاهرة
+        const keyboardThreshold = 200; // حد التغير لاعتبار الكيبورد ظاهر
+        const heightDifference = initialViewportHeight - visualHeight;
+        
+        if (heightDifference > keyboardThreshold && !isKeyboardVisible) {
+            // الكيبورد ظهر
+            isKeyboardVisible = true;
+            
+            // ضبط ارتفاع body لتجنب المساحة البيضاء
+            document.body.style.height = visualHeight + 'px';
             document.body.style.overflow = 'hidden';
-        } else {
-            // الكيبورد مخفي
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            document.body.style.top = `-${window.scrollY}px`;
+            
+            // حفظ موضع التمرير الحالي
+            document.body.dataset.scrollY = window.scrollY;
+            
+        } else if (heightDifference <= keyboardThreshold && isKeyboardVisible) {
+            // الكيبورد اختفى
+            isKeyboardVisible = false;
+            
+            // استعادة الإعدادات الأصلية
             document.body.style.height = '';
             document.body.style.overflow = '';
-            baseHeight = currentHeight; // تحديث الارتفاع
+            document.body.style.position = '';
+            document.body.style.width = '';
+            document.body.style.top = '';
+            
+            // استعادة موضع التمرير
+            if (document.body.dataset.scrollY) {
+                window.scrollTo(0, parseInt(document.body.dataset.scrollY));
+                delete document.body.dataset.scrollY;
+            }
+            
+            // تحديث الارتفاع الأولي
+            initialViewportHeight = currentHeight;
+        }
+        
+        // إذا كان visualViewport متغيرًا، تحديث الارتفاع ديناميكيًا
+        if (isKeyboardVisible && window.visualViewport) {
+            document.body.style.height = window.visualViewport.height + 'px';
         }
     }
 
     // استماع لتغيير حجم الشاشة
     window.addEventListener('resize', adjustBodyHeight);
 
-    // إذا كان visualViewport متوفر، استمع لتغييره أيضاً
+    // استماع لـ visualViewport إذا كان متوفر
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', adjustBodyHeight);
+        window.visualViewport.addEventListener('scroll', () => {
+            if (isKeyboardVisible) {
+                window.visualViewport.scrollTop = 0;
+            }
+        });
     }
+    
+    // معالجة التركيز على حقول الإدخال
+    document.addEventListener('focusin', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            setTimeout(adjustBodyHeight, 100);
+        }
+    });
+    
+    document.addEventListener('focusout', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            setTimeout(adjustBodyHeight, 300);
+        }
+    });
+    
+    // التهيئة الأولية
+    adjustBodyHeight();
 });
 </script>
 
