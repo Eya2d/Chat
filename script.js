@@ -177,6 +177,50 @@ window.onload = () => {
         });
     }
 
+    // ======== معاينة الرسالة الطويلة ========
+    function showMessagePreview(messageElement) {
+        const messageContent = messageElement.textContent || messageElement.innerText;
+        const previewContent = document.getElementById('messagePreviewContent');
+        const previewModal = document.getElementById('messagePreviewModal');
+        
+        // تعيين محتوى الرسالة
+        previewContent.textContent = messageContent;
+        
+        // إظهار المودال
+        previewModal.style.display = 'flex';
+        
+        // إضافة كلاس joo للـ body
+        document.body.classList.add('joo');
+        
+        // منع التمرير
+        document.body.style.overflow = 'hidden';
+        
+        // إضافة حدث الإغلاق
+        document.getElementById('closePreviewBtn').onclick = closeMessagePreview;
+        
+        // إغلاق عند النقر خارج المحتوى
+        previewModal.addEventListener('click', function(e) {
+            if (e.target === previewModal) {
+                closeMessagePreview();
+            }
+        });
+        
+        // إغلاق بـ Esc
+        document.addEventListener('keydown', function closeOnEsc(e) {
+            if (e.key === 'Escape') {
+                closeMessagePreview();
+                document.removeEventListener('keydown', closeOnEsc);
+            }
+        });
+    }
+    
+    function closeMessagePreview() {
+        const previewModal = document.getElementById('messagePreviewModal');
+        previewModal.style.display = 'none';
+        document.body.classList.remove('joo');
+        document.body.style.overflow = '';
+    }
+
     // ======== التحكم في زر النزول لأسفل ========
     function toggleScrollButton() {
         const scrollBottom = messagesDiv.scrollHeight - messagesDiv.scrollTop - messagesDiv.clientHeight;
@@ -1689,6 +1733,16 @@ window.onload = () => {
         if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
             suggestionsDiv.style.display = 'none';
             isNavigatingWithArrows = false;
+        }
+    });
+
+    // ======== إضافة حدث النقر على الرسائل الطويلة ========
+    document.addEventListener('click', function(e) {
+        // البحث عن أقرب عنصر يحمل الكلاسات المطلوبة
+        const messageElement = e.target.closest('.message.bot.new.typing-message.collapsed');
+        
+        if (messageElement && !e.target.closest('.chat-div')) {
+            showMessagePreview(messageElement);
         }
     });
 
