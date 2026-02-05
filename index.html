@@ -319,38 +319,41 @@ Share.save({
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-
     let baseHeight = window.innerHeight;
 
-    function adjustBodyHeight() {
-        let currentHeight = window.innerHeight;
-
-        // استخدام visualViewport إذا كان متوفر
+    function adjustForKeyboard() {
+        let viewportHeight = window.innerHeight;
         if (window.visualViewport) {
-            currentHeight = window.visualViewport.height;
+            viewportHeight = window.visualViewport.height;
         }
 
-        if (currentHeight < baseHeight) {
+        if (viewportHeight < baseHeight) {
             // الكيبورد ظاهر
-            document.body.style.height = currentHeight + 'px';
+            document.body.style.position = 'fixed';
+            document.body.style.top = '0';
+            document.body.style.left = '0';
+            document.body.style.right = '0';
+            document.body.style.bottom = '0';
             document.body.style.overflow = 'hidden';
         } else {
             // الكيبورد مخفي
-            document.body.style.height = '';
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.left = '';
+            document.body.style.right = '';
+            document.body.style.bottom = '';
             document.body.style.overflow = '';
-            baseHeight = currentHeight; // تحديث الارتفاع
+            baseHeight = viewportHeight;
         }
     }
 
-    // استماع لتغيير حجم الشاشة
-    window.addEventListener('resize', adjustBodyHeight);
-
-    // إذا كان visualViewport متوفر، استمع لتغييره أيضاً
+    window.addEventListener('resize', adjustForKeyboard);
     if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', adjustBodyHeight);
+        window.visualViewport.addEventListener('resize', adjustForKeyboard);
     }
 });
 </script>
+
 
 </body>
 </html>
