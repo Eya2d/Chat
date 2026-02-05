@@ -720,7 +720,7 @@ body .message.user {
 }
 
 /* تحسينات للأجهزة المحمولة */
-@media (max-width: 480px) {
+@media (max-width: 670px) {
     body {
         user-select: none;
         padding: 0;
@@ -735,9 +735,11 @@ body .message.user {
         bottom: 0;
         height: 100%;
         border-radius: 0;
+        width: 100%;
     }
     .box {
         margin: 0 !important;
+        width: 100% !important;
     }
     
     .messages {
