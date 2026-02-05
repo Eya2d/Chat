@@ -321,46 +321,34 @@ Share.save({
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
-    const body = document.body;
     let baseHeight = window.innerHeight;
-    let isKeyboardVisible = false;
 
-    function adjustBodyForKeyboard() {
-        let viewportHeight = window.innerHeight;
+    function adjustBodyHeight() {
+        let currentHeight = window.innerHeight;
 
+        // استخدام visualViewport إذا كان متوفر
         if (window.visualViewport) {
-            viewportHeight = window.visualViewport.height;
+            currentHeight = window.visualViewport.height;
         }
 
-        if (viewportHeight < baseHeight) {
+        if (currentHeight < baseHeight) {
             // الكيبورد ظاهر
-            if (!isKeyboardVisible) {
-                isKeyboardVisible = true;
-                body.style.position = 'fixed';
-                body.style.top = '0';
-                body.style.left = '0';
-                body.style.width = '100%';
-                body.style.height = viewportHeight + 'px';
-                body.style.overflow = 'hidden';
-            }
+            document.body.style.height = currentHeight + 'px';
+            document.body.style.overflow = 'hidden';
         } else {
             // الكيبورد مخفي
-            if (isKeyboardVisible) {
-                isKeyboardVisible = false;
-                body.style.position = '';
-                body.style.top = '';
-                body.style.left = '';
-                body.style.width = '';
-                body.style.height = '';
-                body.style.overflow = '';
-                baseHeight = viewportHeight; // تحديث الارتفاع الأساسي
-            }
+            document.body.style.height = '';
+            document.body.style.overflow = '';
+            baseHeight = currentHeight; // تحديث الارتفاع
         }
     }
 
-    window.addEventListener('resize', adjustBodyForKeyboard);
+    // استماع لتغيير حجم الشاشة
+    window.addEventListener('resize', adjustBodyHeight);
+
+    // إذا كان visualViewport متوفر، استمع لتغييره أيضاً
     if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', adjustBodyForKeyboard);
+        window.visualViewport.addEventListener('resize', adjustBodyHeight);
     }
 });
 </script>
