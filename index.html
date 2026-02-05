@@ -318,30 +318,38 @@ Share.save({
 
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-    
-      // حفظ الارتفاع الأساسي للشاشة
-      let baseHeight = window.innerHeight;
-    
-      function adjustBodyHeight() {
-        const currentHeight = window.innerHeight;
-    
-        if (currentHeight < baseHeight) {
-          // الكيبورد ظاهر
-          document.body.style.height = currentHeight + 'px';
-          document.body.style.overflow = 'hidden';
-        } else {
-          // الكيبورد مخفي
-          document.body.style.height = '';
-          document.body.style.overflow = '';
-          baseHeight = currentHeight; // تحديث الارتفاع
+document.addEventListener('DOMContentLoaded', () => {
+
+    let baseHeight = window.innerHeight;
+
+    function adjustBodyHeight() {
+        let currentHeight = window.innerHeight;
+
+        // استخدام visualViewport إذا كان متوفر
+        if (window.visualViewport) {
+            currentHeight = window.visualViewport.height;
         }
-      }
-  
-      // عند تغيير حجم الشاشة
-      window.addEventListener('resize', adjustBodyHeight);
-  
-    });
+
+        if (currentHeight < baseHeight) {
+            // الكيبورد ظاهر
+            document.body.style.height = currentHeight + 'px';
+            document.body.style.overflow = 'hidden';
+        } else {
+            // الكيبورد مخفي
+            document.body.style.height = '';
+            document.body.style.overflow = '';
+            baseHeight = currentHeight; // تحديث الارتفاع
+        }
+    }
+
+    // استماع لتغيير حجم الشاشة
+    window.addEventListener('resize', adjustBodyHeight);
+
+    // إذا كان visualViewport متوفر، استمع لتغييره أيضاً
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', adjustBodyHeight);
+    }
+});
 </script>
 
 </body>
