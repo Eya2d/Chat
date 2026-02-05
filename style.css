@@ -720,7 +720,7 @@ body .message.user {
 }
 
 /* تحسينات للأجهزة المحمولة */
-@media (max-width: 670px) {
+@media (max-width: 700px) {
     body {
         user-select: none;
         padding: 0;
