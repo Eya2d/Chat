@@ -40,7 +40,7 @@
     <div class="messages" id="messages"></div>
     <div class="suggestions Wave-all" id="suggestions"></div>
     <div class="search-box">
-        <div class="spinner-div"><div class="spinner" id="spinner"></div></div>
+        <div class="spinner-div" id="spinner"><div class="spinner"></div></div>
         <div class="spinner2 Wave-center material-symbols-outlined" title="Search on Wikipedia">travel_explore</div>
 
         <input type="search" id="searchInput" class="abc>eng" placeholder="اكتب سؤالك هنا...">  <!--اكتب سؤالك هنا...-->
@@ -76,7 +76,30 @@
         <a onclick="openBox('box2')">سايسة الخصوصية<ion-icon name="arrow-forward-outline"></ion-icon></a>
         <a onclick="openBox('box3')">سياسة الإستعمال<ion-icon name="arrow-forward-outline"></ion-icon></a>
         <a onclick="openBox('box5')">تواصل معنا<ion-icon name="arrow-forward-outline"></ion-icon></a>
+        <!-- <a onclick="openBox('box6')">الإعدادت<ion-icon name="arrow-forward-outline"></ion-icon></a> -->
         <a onclick="openBox('box4')">من نحن<ion-icon name="arrow-forward-outline"></ion-icon></a>
+    </div>
+</div>
+
+<!-- الإعدادت -->
+<div id="box6-content" class="box Wave-all-center">
+    <div class="name">
+        <name>الإعدادت</name>
+        <button class="close-btn button" onclick="openBox('box1')"><ion-icon name="arrow-forward-outline"></ion-icon></button>
+    </div>
+    <div class="box1 Wave-all">
+        <a id="deleteAllChatsBtn">حذف كل المحادثات</a>
+    </div>
+</div>
+
+<!-- عرض الرسالة -->
+<div id="messagePreviewModal" class="box Wave-all-center">
+    <div class="name">
+        <name>محتوى الرسالة</name>
+        <button class="button" id="closePreviewBtn"><ion-icon name="arrow-forward-outline"></ion-icon></button>
+    </div>
+    <div class="box1 zoen" id="messagePreviewContent">
+         
     </div>
 </div>
 
@@ -230,6 +253,9 @@
 </div>
 
 
+
+
+
 <script>
 const loader = document.getElementById("page-loader");
 const heartbeatPath = document.querySelector(".heartbeat path");
@@ -287,5 +313,36 @@ Share.save({
         Wave-all-center اضف للديف الرئيسي لإظهار الموجة من المنتصف لعدة عناصر كلاس
 
     -->
+
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+    
+      // حفظ الارتفاع الأساسي للشاشة
+      let baseHeight = window.innerHeight;
+    
+      function adjustBodyHeight() {
+        const currentHeight = window.innerHeight;
+    
+        if (currentHeight < baseHeight) {
+          // الكيبورد ظاهر
+          document.body.style.height = currentHeight + 'px';
+          document.body.style.overflow = 'hidden';
+        } else {
+          // الكيبورد مخفي
+          document.body.style.height = '';
+          document.body.style.overflow = '';
+          baseHeight = currentHeight; // تحديث الارتفاع
+        }
+      }
+  
+      // عند تغيير حجم الشاشة
+      window.addEventListener('resize', adjustBodyHeight);
+  
+    });
+</script>
+
 </body>
 </html>
