@@ -7,10 +7,6 @@ window.onload = () => {
     const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
     const spinner = document.getElementById('spinner');
     
-    // ======== التحقق من وجود زر ويكيبيديا ========
-    let wikiBtn = document.getElementById('wikiBtn');
-    let wikiBtnExists = !!wikiBtn;
-    
     let selectedIndex = 0;
     let isNavigatingWithArrows = false;
     let dynamicSuggestions = [];
@@ -20,10 +16,6 @@ window.onload = () => {
     let hasPendingMessages = false;
     let isProcessingQuestion = false;
     let typingInProgress = false;
-    
-    // ======== متغيرات ويكيبيديا ========
-    let wikiSearchActive = false;
-    let lastWikiQuery = '';
 
     // ======== قائمة الرسائل الترحيبية المختلفة ========
     const welcomeMessages = [
@@ -52,11 +44,7 @@ window.onload = () => {
     function hideSpinner() {
         spinner.style.display = 'none';
         searchInput.disabled = false;
-        if (wikiSearchActive) {
-            searchInput.placeholder = 'اكتب موضوع البحث واضغط Enter...';
-        } else {
-            searchInput.placeholder = 'اكتب سؤالك هنا...';
-        }
+        searchInput.placeholder = 'اكتب سؤالك هنا...';
         isProcessingQuestion = false;
         typingInProgress = false;
     }
@@ -191,7 +179,7 @@ window.onload = () => {
 
     // ======== معاينة الرسالة الطويلة ========
     function showMessagePreview(messageElement) {
-        const messageContent = messageElement.textContent || message.innerText;
+        const messageContent = messageElement.textContent || messageElement.innerText;
         const previewContent = document.getElementById('messagePreviewContent');
         const previewModal = document.getElementById('messagePreviewModal');
         
@@ -487,38 +475,21 @@ window.onload = () => {
         return text;
     }
 
-    // ======== دالة معالجة صور ويكيبيديا ========
-    function processWikipediaImages(text) {
-        // البحث عن روابط الصور في النص
-        const imageRegex = /!\[صورة\]\((https?:\/\/[^\s]+)\)/g;
-        return text.replace(imageRegex, (match, imageUrl) => {
-            return `<div class="wiki-image-container">
-                <img src="${imageUrl}" alt="صورة من ويكيبيديا" class="wiki-image" loading="lazy">
-                <div class="image-loading">جاري تحميل الصورة من ويكيبيديا...</div>
-            </div>`;
-        });
-    }
-
     // ======== إضافة رسالة مع دعم الصور ========
     function addMessage(text, sender, isNew = true) {
         const msg = document.createElement('div');
         msg.classList.add('message', sender);
         if (isNew) msg.classList.add('new');
         
-        // معالجة صور ويكيبيديا إذا كان النص يحتوي على صور
-        if (text.includes('![صورة](')) {
-            text = processWikipediaImages(text);
-        }
-        
         const processedText = processTextWithImages(text);
         
-        if (processedText.includes('<img') || processedText.includes('message-image-container') || processedText.includes('wiki-image-container')) {
+        if (processedText.includes('<img') || processedText.includes('message-image-container')) {
             msg.innerHTML = processedText;
             
-            const images = msg.querySelectorAll('.message-image, .wiki-image');
+            const images = msg.querySelectorAll('.message-image');
             images.forEach(img => {
                 img.addEventListener('load', () => {
-                    const container = img.closest('.message-image-container, .wiki-image-container');
+                    const container = img.closest('.message-image-container');
                     const loading = container.querySelector('.image-loading');
                     if (loading) {
                         loading.style.display = 'none';
@@ -528,7 +499,7 @@ window.onload = () => {
                 });
                 
                 img.addEventListener('error', () => {
-                    const container = img.closest('.message-image-container, .wiki-image-container');
+                    const container = img.closest('.message-image-container');
                     const loading = container.querySelector('.image-loading');
                     if (loading) {
                         loading.textContent = 'فشل تحميل الصورة';
@@ -610,11 +581,6 @@ window.onload = () => {
         // التحقق إذا كانت هذه رسالة ترحيبية
         const isWelcomeMessage = welcomeMessages.some(msg => text.includes(msg));
         
-        // معالجة صور ويكيبيديا إذا كان النص يحتوي على صور
-        if (text.includes('![صورة](')) {
-            text = processWikipediaImages(text);
-        }
-        
         // تحديد إذا كانت الرسالة لها أجزاء متعددة (أطول من 200 حرف)
         const hasMultipleParts = text.length > 200;
         
@@ -636,13 +602,13 @@ window.onload = () => {
         if (!isNew) {
             const processedText = processTextWithImages(text);
         
-            if (processedText.includes('<img') || processedText.includes('message-image-container') || processedText.includes('wiki-image-container')) {
+            if (processedText.includes('<img') || processedText.includes('message-image-container')) {
                 msg.innerHTML = processedText;
             
-                const images = msg.querySelectorAll('.message-image, .wiki-image');
+                const images = msg.querySelectorAll('.message-image');
                 images.forEach(img => {
                     img.addEventListener('load', () => {
-                        const container = img.closest('.message-image-container, .wiki-image-container');
+                        const container = img.closest('.message-image-container');
                         const loading = container.querySelector('.image-loading');
                         if (loading) loading.style.display = 'none';
                     
@@ -651,7 +617,7 @@ window.onload = () => {
                     });
                 
                     img.addEventListener('error', () => {
-                        const container = img.closest('.message-image-container, .wiki-image-container');
+                        const container = img.closest('.message-image-container');
                         const loading = container.querySelector('.image-loading');
                         if (loading) {
                             loading.textContent = 'فشل تحميل الصورة';
@@ -788,10 +754,10 @@ window.onload = () => {
                     
                         while (tempDiv.firstChild) msg.appendChild(tempDiv.firstChild);
                     
-                        const images = msg.querySelectorAll('.message-image, .wiki-image');
+                        const images = msg.querySelectorAll('.message-image');
                         images.forEach(img => {
                             img.addEventListener('load', () => {
-                                const container = img.closest('.message-image-container, .wiki-image-container');
+                                const container = img.closest('.message-image-container');
                                 const loading = container.querySelector('.image-loading');
                                 if (loading) loading.style.display = 'none';
                             
@@ -800,7 +766,7 @@ window.onload = () => {
                             });
                         
                             img.addEventListener('error', () => {
-                                const container = img.closest('.message-image-container, .wiki-image-container');
+                                const container = img.closest('.message-image-container');
                                 const loading = container.querySelector('.image-loading');
                                 if (loading) {
                                     loading.textContent = 'فشل تحميل الصورة';
@@ -1078,10 +1044,10 @@ window.onload = () => {
                             messageElement.appendChild(tempDiv.firstChild);
                         }
                         
-                        const images = messageElement.querySelectorAll('.message-image, .wiki-image');
+                        const images = messageElement.querySelectorAll('.message-image');
                         images.forEach(img => {
                             img.addEventListener('load', () => {
-                                const container = img.closest('.message-image-container, .wiki-image-container');
+                                const container = img.closest('.message-image-container');
                                 const loading = container.querySelector('.image-loading');
                                 if (loading) {
                                     loading.style.display = 'none';
@@ -1091,7 +1057,7 @@ window.onload = () => {
                             });
                             
                             img.addEventListener('error', () => {
-                                const container = img.closest('.message-image-container, .wiki-image-container');
+                                const container = img.closest('.message-image-container');
                                 const loading = container.querySelector('.image-loading');
                                 if (loading) {
                                     loading.textContent = 'فشل تحميل الصورة';
@@ -1295,13 +1261,6 @@ window.onload = () => {
 
     // ======== تحديث المقترحات مع البحث النصي المتقدم والمقتطفات ========
     function updateSuggestions(value) {
-        // إذا كان بحث ويكيبيديا نشطاً، لا تظهر الاقتراحات
-        if (wikiSearchActive) {
-            suggestionsDiv.style.display = 'none';
-            suggestionsDiv.innerHTML = '';
-            return;
-        }
-        
         suggestionsDiv.innerHTML = '';
         selectedIndex = 0;
 
@@ -1606,158 +1565,9 @@ window.onload = () => {
         }).filter(ayah => ayah.number > 0);
     }
 
-    // ======== دالة بحث ويكيبيديا ========
-    async function searchWikipedia(query) {
-        try {
-            // البحث باللغة العربية
-            const response = await fetch(
-                `https://ar.wikipedia.org/w/api.php?action=query&format=json&origin=*&list=search&srsearch=${encodeURIComponent(query)}&srlimit=3&utf8=1`
-            );
-            const data = await response.json();
-            
-            if (data.query && data.query.search.length > 0) {
-                const searchResults = data.query.search;
-                let resultText = `🔍 **نتائج ويكيبيديا عن: "${query}"**\n\n`;
-                
-                for (const result of searchResults) {
-                    // الحصول على محتوى المقال
-                    const contentResponse = await fetch(
-                        `https://ar.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=extracts|pageimages|info&exintro=1&explaintext=1&inprop=url&pithumbsize=200&titles=${encodeURIComponent(result.title)}`
-                    );
-                    const contentData = await contentResponse.json();
-                    const pages = contentData.query.pages;
-                    const pageId = Object.keys(pages)[0];
-                    const page = pages[pageId];
-                    
-                    resultText += `### ${result.title}\n`;
-                    
-                    if (page.extract) {
-                        // تنظيف النص من الرموز غير المرغوب فيها
-                        let cleanExtract = page.extract
-                            .replace(/\[.*?\]/g, '') // إزالة الأقواس المربعة
-                            .replace(/\{\{.*?\}\}/g, '') // إزالة القوالب
-                            .trim();
-                        
-                        // تحديد طول النص بناءً على محتواه
-                        const extractLength = cleanExtract.length > 250 ? 250 : cleanExtract.length;
-                        resultText += `${cleanExtract.substring(0, extractLength)}...\n`;
-                    }
-                    
-                    if (page.thumbnail) {
-                        resultText += `\n![صورة](${page.thumbnail.source})\n`;
-                    }
-                    
-                    if (page.fullurl) {
-                        resultText += `[رابط المقال](${page.fullurl})\n`;
-                    }
-                    
-                    resultText += `\n---\n\n`;
-                }
-                
-                resultText += `*المصدر: ويكيبيديا العربية*`;
-                return resultText;
-            } else {
-                return `❌ لم يتم العثور على نتائج في ويكيبيديا عن "${query}"`;
-            }
-        } catch (error) {
-            console.error('خطأ في البحث في ويكيبيديا:', error);
-            return `⚠️ حدث خطأ أثناء البحث في ويكيبيديا. الرجاء المحاولة مرة أخرى.`;
-        }
-    }
-
-    // ======== دالة بدء/إيقاف بحث ويكيبيديا ========
-    function toggleWikipediaSearch() {
-        wikiSearchActive = !wikiSearchActive;
-        
-        if (wikiSearchActive) {
-            // تفعيل البحث
-            if (wikiBtnExists) {
-                wikiBtn.classList.add('active');
-                const btnText = wikiBtn.querySelector('.btn-text');
-                if (btnText) {
-                    btnText.textContent = 'إيقاف ويكيبيديا';
-                }
-            }
-            
-            // إخفاء الاقتراحات
-            suggestionsDiv.style.display = 'none';
-            suggestionsDiv.innerHTML = '';
-            
-            // رسالة مختصرة جداً
-            addMessage('ويكيبيديا مفعل - اكتب واضغط Enter', 'user');
-            
-            // تغيير placeholder
-            searchInput.placeholder = 'اكتب موضوع البحث واضغط Enter...';
-            
-            // تفريغ حقل البحث
-            searchInput.value = '';
-            searchInput.focus();
-            
-        } else {
-            // إيقاف البحث
-            if (wikiBtnExists) {
-                wikiBtn.classList.remove('active');
-                const btnText = wikiBtn.querySelector('.btn-text');
-                if (btnText) {
-                    btnText.textContent = 'ويكيبيديا';
-                }
-            }
-            
-            // إعادة placeholder الأصلي
-            searchInput.placeholder = 'اكتب سؤالك هنا...';
-            
-            // رسالة مختصرة جداً
-            addMessage('ويكيبيديا متوقف', 'user');
-            
-            // تفريغ حقل البحث
-            searchInput.value = '';
-            searchInput.focus();
-        }
-    }
-
-    // ======== تنفيذ بحث ويكيبيديا ========
-    async function performWikiSearch(query) {
-        if (!wikiSearchActive || !query || query === lastWikiQuery) return;
-        
-        lastWikiQuery = query;
-        
-        // إضافة رسالة المستخدم
-        addMessage(`🔍 البحث في ويكيبيديا عن: ${query}`, 'user');
-        
-        // إظهار spinner
-        showSpinner();
-        
-        try {
-            const wikiResult = await searchWikipedia(query);
-            
-            // إخفاء spinner
-            hideSpinner();
-            
-            // عرض النتيجة مع تأثير الكتابة
-            if (wikiResult.length > 200) {
-                showLongAnswer(wikiResult);
-            } else {
-                addBotMessageWithTyping(wikiResult);
-            }
-        } catch (error) {
-            hideSpinner();
-            addBotMessageWithTyping('⚠️ حدث خطأ أثناء البحث في ويكيبيديا. الرجاء المحاولة مرة أخرى.');
-        }
-    }
-
     // ======== معالجة السؤال ========
     function handleQuestion(itemOrText) {
         if (isProcessingQuestion) return;
-        
-        // إذا كان بحث ويكيبيديا نشطاً، نفذ بحث ويكيبيديا
-        if (wikiSearchActive && typeof itemOrText === "string") {
-            performWikiSearch(itemOrText);
-            searchInput.value = '';
-            suggestionsDiv.innerHTML = '';
-            suggestionsDiv.style.display = 'none';
-            searchInput.blur();
-            return;
-        }
         
         document.querySelectorAll('.more-btn').forEach(btn => {
             const container = btn.closest('div');
@@ -1832,11 +1642,6 @@ window.onload = () => {
     // ======== محادثة جديدة ========
     newChatBtn.addEventListener('click', () => {
         if (confirm("هل تريد حقًا بدء محادثة جديدة؟ سيتم حذف جميع الرسائل الحالية.")) {
-            // إيقاف ويكيبيديا إذا كانت نشطة
-            if (wikiSearchActive) {
-                toggleWikipediaSearch();
-            }
-            
             messagesDiv.innerHTML = '';
             localStorage.removeItem('chatMessages');
             // إخفاء زر النزول لأسفل عند بدء محادثة جديدة
@@ -1854,7 +1659,6 @@ window.onload = () => {
         updateSuggestions(e.target.value);
     });
 
-    // ======== تعديل معالج حدث Enter لدعم ويكيبيديا ========
     searchInput.addEventListener('keydown', (e) => {
         if (isProcessingQuestion) {
             e.preventDefault();
@@ -1895,17 +1699,6 @@ window.onload = () => {
         } else if (e.key === "Enter") {
             e.preventDefault();
             if (searchInput.value.trim()) {
-                if (wikiSearchActive) {
-                    // إذا كان بحث ويكيبيديا نشطاً، نفذ بحث ويكيبيديا
-                    performWikiSearch(searchInput.value.trim());
-                    searchInput.value = "";
-                    suggestionsDiv.innerHTML = "";
-                    suggestionsDiv.style.display = "none";
-                    isNavigatingWithArrows = false;
-                    searchInput.blur();
-                    return;
-                }
-                
                 if (!isNavigatingWithArrows) {
                     handleQuestion(searchInput.value.trim());
                 } else if (buttons.length > 0) {
@@ -1931,10 +1724,6 @@ window.onload = () => {
                 return;
             }
         } else if (e.key === "Escape") {
-            // عند الضغط على Escape، إيقاف ويكيبيديا إذا كانت نشطة
-            if (wikiSearchActive) {
-                toggleWikipediaSearch();
-            }
             suggestionsDiv.style.display = "none";
             isNavigatingWithArrows = false;
             searchInput.blur();
@@ -1942,11 +1731,6 @@ window.onload = () => {
             isNavigatingWithArrows = false;
         }
     });
-
-    // ======== ربط حدث النقر على زر ويكيبيديا (إذا كان موجوداً) ========
-    if (wikiBtnExists) {
-        wikiBtn.addEventListener('click', toggleWikipediaSearch);
-    }
 
     // إخفاء الاقتراحات عند النقر خارجها
     document.addEventListener('click', (e) => {
