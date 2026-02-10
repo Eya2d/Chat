@@ -1,0 +1,67 @@
+.zeo {
+    background: #ebfaf8;
+}
+.zeo .button {
+    fill: #38b971;
+    color: #38b971;
+    background: #a1ffd326;
+}
+.zeo .button:hover {
+    background: #73daaa36;
+}
+.zeo .tersaa-14a0 a {
+    color: #41bd78;
+}
+.zeo .tersaa-14a0 a:hover {
+    color: #379b63;
+}
+.zeo .bot-message-wrapper::after {
+    filter: hue-rotate(226deg);
+}
+.zeo .spinner {
+    border: 3px solid #3ebc7647;
+    border-top: 3px solid #3ebc76;
+}
+.zeo .search-box input:focus {
+    border-color: #41bd78;
+    box-shadow: 0 0 0 3px rgb(235 250 248);
+}
+.zeo .search-box::after {
+    background: linear-gradient(90deg, #41bd78, #83d4a9ba);
+}
+.zeo #spinner svg {
+    fill: #38b971;
+}
+.zeo .message.bot {
+    background: #7fdfbf2b;
+}
+.zeo .message.user::after {
+    filter: hue-rotate(316deg);
+    background-color: #3bb9d7;
+    opacity: .8;
+}
+.zeo .message.user {
+    background: #41bd78;
+}
+.zeo .Sendfeedback {
+    color: #2caf66;
+}
+.zeo .share-btn {
+    background: #41bd78;
+}
+.zeo .share-btn:hover {
+    background: #279b5b !important;
+}
+.zeo .file-attach-btn:hover {
+    background-color: #2caf6621;
+    border-color: #2caf66;
+}
+.zeo .file-attach-btn:hover svg {
+    color: #2caf66;
+}
+.zeo .heartbeat path {
+    stroke: #2caf66;
+}
+.zeo .button .ripple, .zeo .scr-top .ripple, .zeo .menu .ripple, .zeo .chat-div .ripple, .zeo .box1 a .ripple {
+    background-color: #82d1ac3d;
+}
