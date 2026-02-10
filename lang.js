@@ -92,75 +92,80 @@
 
 
 
-document.querySelectorAll('.diov').forEach(el => {
-  let startY = 0;
-  let maxPull = 30; // الحد الأقصى
-  let pullingTop = false;
-  let pullingBottom = false;
+function enablePullEffect(el) {
 
-  // قراءة البادينج الأصلي
+  // منع التفعيل المكرر
+  if (el._pullEnabled) return;
+  el._pullEnabled = true;
+
+  // قراءة البادينج الأصلي مع fallback
   const style = getComputedStyle(el);
   const basePaddingTop = parseFloat(style.paddingTop) || 0;
   const basePaddingBottom = parseFloat(style.paddingBottom) || 0;
+
+  let startY = 0;
+  let pullingTop = false;
+  let pullingBottom = false;
+  const MAX_EXTRA = 50;
+
+  el.style.transition = 'padding 0.25s ease';
+  el.style.overflowY = 'auto';
+  el.style.webkitOverflowScrolling = 'touch';
 
   el.addEventListener('touchstart', e => {
     startY = e.touches[0].clientY;
     pullingTop = false;
     pullingBottom = false;
-  });
+    el.style.transition = 'none';
+  }, { passive: true });
 
   el.addEventListener('touchmove', e => {
     const currentY = e.touches[0].clientY;
-    const deltaY = currentY - startY;
+    const diff = currentY - startY;
 
-    const scrollTop = el.scrollTop;
-    const scrollHeight = el.scrollHeight;
-    const offsetHeight = el.offsetHeight;
+    const atTop = el.scrollTop <= 0;
+    const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
 
-    // السحب للأسفل عند الوصول للأعلى
-    if (scrollTop === 0 && deltaY > 0) {
-      pullingTop = true;
-      let pad = Math.min(maxPull, deltaY / 2);
-      el.style.paddingTop = (basePaddingTop + pad) + 'px';
-      e.preventDefault(); // منع التمرير الافتراضي
+    if (atTop && diff > 0) pullingTop = true;
+    if (atBottom && diff < 0) pullingBottom = true;
+
+    if (pullingTop && diff > 0) {
+      const extra = Math.min(diff / 3, MAX_EXTRA);
+      el.style.paddingTop = (basePaddingTop + extra) + 'px';
     }
 
-    // السحب للأعلى عند الوصول للأسفل
-    if (scrollTop + offsetHeight >= scrollHeight && deltaY < 0) {
-      pullingBottom = true;
-      let pad = Math.min(maxPull, -deltaY / 2);
-      el.style.paddingBottom = (basePaddingBottom + pad) + 'px';
-      e.preventDefault();
+    if (pullingBottom && diff < 0) {
+      const extra = Math.min(Math.abs(diff) / 3, MAX_EXTRA);
+      el.style.paddingBottom = (basePaddingBottom + extra) + 'px';
     }
-  }, { passive: false });
 
-  el.addEventListener('touchend', () => {
-    // إرجاع البادينج تدريجياً
-    if (pullingTop || pullingBottom) {
-      let top = parseFloat(el.style.paddingTop) || basePaddingTop;
-      let bottom = parseFloat(el.style.paddingBottom) || basePaddingBottom;
+  }, { passive: true });
 
-      const anim = setInterval(() => {
-        let done = true;
-        if (top > basePaddingTop) {
-          top -= 2; // سرعة الإرجاع
-          if (top < basePaddingTop) top = basePaddingTop;
-          el.style.paddingTop = top + 'px';
-          done = false;
-        }
-        if (bottom > basePaddingBottom) {
-          bottom -= 2;
-          if (bottom < basePaddingBottom) bottom = basePaddingBottom;
-          el.style.paddingBottom = bottom + 'px';
-          done = false;
-        }
-        if (done) clearInterval(anim);
-      }, 10);
-    }
-  });
+  function reset() {
+    el.style.transition = 'padding 0.25s ease';
+    el.style.paddingTop = basePaddingTop + 'px';
+    el.style.paddingBottom = basePaddingBottom + 'px';
+    pullingTop = false;
+    pullingBottom = false;
+  }
+
+  el.addEventListener('touchend', reset);
+  el.addEventListener('touchcancel', reset);
+}
+
+/* =========================
+   🔹 التفعيل الحالي (كما هو)
+   ========================= */
+document.querySelectorAll('.diov').forEach(el => {
+  enablePullEffect(el);
 });
 
-
+/* =========================
+   🔹 للاستخدام لاحقًا (ديناميكي)
+   =========================
+   مثال:
+   enablePullEffect(element);
+*/
 
 
 
