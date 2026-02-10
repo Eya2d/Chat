@@ -98,7 +98,7 @@ function enablePullEffect(el) {
   if (el._pullEnabled) return;
   el._pullEnabled = true;
 
-  // قراءة البادينج الأصلي مع fallback
+  // قراءة البادينج الأصلي
   const style = getComputedStyle(el);
   const basePaddingTop = parseFloat(style.paddingTop) || 0;
   const basePaddingBottom = parseFloat(style.paddingBottom) || 0;
@@ -106,17 +106,29 @@ function enablePullEffect(el) {
   let startY = 0;
   let pullingTop = false;
   let pullingBottom = false;
-  const MAX_EXTRA = 40;
 
-  el.style.transition = 'padding 0.25s ease';
+  // قيم سلاسة غير ملحوظة
+  const MAX_EXTRA = 26;     // أقل = أخفى
+  const RESISTANCE = 5.5;  // أعلى = أنعم
+
+  let currentTop = basePaddingTop;
+  let currentBottom = basePaddingBottom;
+  let raf = null;
+
   el.style.overflowY = 'auto';
   el.style.webkitOverflowScrolling = 'touch';
+
+  function applyPadding() {
+    el.style.paddingTop = currentTop + 'px';
+    el.style.paddingBottom = currentBottom + 'px';
+  }
 
   el.addEventListener('touchstart', e => {
     startY = e.touches[0].clientY;
     pullingTop = false;
     pullingBottom = false;
     el.style.transition = 'none';
+    cancelAnimationFrame(raf);
   }, { passive: true });
 
   el.addEventListener('touchmove', e => {
@@ -129,22 +141,28 @@ function enablePullEffect(el) {
     if (atTop && diff > 0) pullingTop = true;
     if (atBottom && diff < 0) pullingBottom = true;
 
-    if (pullingTop && diff > 0) {
-      const extra = Math.min(diff / 3, MAX_EXTRA);
-      el.style.paddingTop = (basePaddingTop + extra) + 'px';
-    }
+    raf = requestAnimationFrame(() => {
 
-    if (pullingBottom && diff < 0) {
-      const extra = Math.min(Math.abs(diff) / 3, MAX_EXTRA);
-      el.style.paddingBottom = (basePaddingBottom + extra) + 'px';
-    }
+      if (pullingTop && diff > 0) {
+        const extra = Math.min(diff / RESISTANCE, MAX_EXTRA);
+        currentTop = basePaddingTop + extra;
+      }
+
+      if (pullingBottom && diff < 0) {
+        const extra = Math.min(Math.abs(diff) / RESISTANCE, MAX_EXTRA);
+        currentBottom = basePaddingBottom + extra;
+      }
+
+      applyPadding();
+    });
 
   }, { passive: true });
 
   function reset() {
-    el.style.transition = 'padding 0.25s ease';
-    el.style.paddingTop = basePaddingTop + 'px';
-    el.style.paddingBottom = basePaddingBottom + 'px';
+    el.style.transition = 'padding 0.45s cubic-bezier(0.22, 0.61, 0.36, 1)';
+    currentTop = basePaddingTop;
+    currentBottom = basePaddingBottom;
+    applyPadding();
     pullingTop = false;
     pullingBottom = false;
   }
@@ -160,12 +178,6 @@ document.querySelectorAll('.diov').forEach(el => {
   enablePullEffect(el);
 });
 
-/* =========================
-   🔹 للاستخدام لاحقًا (ديناميكي)
-   =========================
-   مثال:
-   enablePullEffect(element);
-*/
 
 
 
