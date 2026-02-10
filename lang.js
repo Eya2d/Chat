@@ -94,22 +94,22 @@
 
 function enablePullEffect(el) {
 
-  // منع التفعيل المكرر
   if (el._pullEnabled) return;
   el._pullEnabled = true;
 
-  // قراءة البادينج الأصلي
   const style = getComputedStyle(el);
   const basePaddingTop = parseFloat(style.paddingTop) || 0;
   const basePaddingBottom = parseFloat(style.paddingBottom) || 0;
 
   let startY = 0;
+  let lastY = 0;
   let pullingTop = false;
   let pullingBottom = false;
+  let directionLocked = false;
 
-  // قيم سلاسة غير ملحوظة
-  const MAX_EXTRA = 26;     // أقل = أخفى
-  const RESISTANCE = 5.5;  // أعلى = أنعم
+  const MAX_EXTRA = 26;
+  const RESISTANCE = 5.5;
+  const DRAG_THRESHOLD = 10; // 🔑 يمنع التفعيل الوهمي
 
   let currentTop = basePaddingTop;
   let currentBottom = basePaddingBottom;
@@ -124,9 +124,9 @@ function enablePullEffect(el) {
   }
 
   el.addEventListener('touchstart', e => {
-    startY = e.touches[0].clientY;
-    pullingTop = false;
-    pullingBottom = false;
+    startY = lastY = e.touches[0].clientY;
+    pullingTop = pullingBottom = false;
+    directionLocked = false;
     el.style.transition = 'none';
     cancelAnimationFrame(raf);
   }, { passive: true });
@@ -134,12 +134,28 @@ function enablePullEffect(el) {
   el.addEventListener('touchmove', e => {
     const currentY = e.touches[0].clientY;
     const diff = currentY - startY;
+    const delta = currentY - lastY;
+    lastY = currentY;
+
+    // 🔒 تجاهل الحركات الوهمية الصغيرة
+    if (Math.abs(diff) < DRAG_THRESHOLD) return;
 
     const atTop = el.scrollTop <= 0;
-    const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+    const atBottom =
+      el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
 
-    if (atTop && diff > 0) pullingTop = true;
-    if (atBottom && diff < 0) pullingBottom = true;
+    // 🔐 قفل الاتجاه مرة واحدة فقط
+    if (!directionLocked) {
+      if (diff > 0 && atTop) {
+        pullingTop = true;
+        directionLocked = true;
+      } else if (diff < 0 && atBottom) {
+        pullingBottom = true;
+        directionLocked = true;
+      } else {
+        return;
+      }
+    }
 
     raf = requestAnimationFrame(() => {
 
@@ -159,24 +175,24 @@ function enablePullEffect(el) {
   }, { passive: true });
 
   function reset() {
-    el.style.transition = 'padding 0.45s cubic-bezier(0.22, 0.61, 0.36, 1)';
+    el.style.transition =
+      'padding 0.45s cubic-bezier(0.22, 0.61, 0.36, 1)';
     currentTop = basePaddingTop;
     currentBottom = basePaddingBottom;
     applyPadding();
-    pullingTop = false;
-    pullingBottom = false;
+    pullingTop = pullingBottom = false;
+    directionLocked = false;
   }
 
   el.addEventListener('touchend', reset);
   el.addEventListener('touchcancel', reset);
 }
 
-/* =========================
-   🔹 التفعيل الحالي (كما هو)
-   ========================= */
+/* التفعيل */
 document.querySelectorAll('.diov').forEach(el => {
   enablePullEffect(el);
 });
+
 
 
 
