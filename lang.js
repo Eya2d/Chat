@@ -93,34 +93,15 @@
 
 
 document.querySelectorAll('.diov').forEach(el => {
+  let startY = 0;
+  let maxPull = 30; // الحد الأقصى
+  let pullingTop = false;
+  let pullingBottom = false;
+
+  // قراءة البادينج الأصلي
   const style = getComputedStyle(el);
   const basePaddingTop = parseFloat(style.paddingTop) || 0;
   const basePaddingBottom = parseFloat(style.paddingBottom) || 0;
-
-  let startY = 0;
-  let pullingTop = false;
-  let pullingBottom = false;
-  let extraPadding = 0;
-  let animationFrame = null;
-
-  function resetPadding() {
-    if (animationFrame) cancelAnimationFrame(animationFrame);
-    function step() {
-      if (extraPadding > 0) {
-        extraPadding -= 2; // سرعة التراجع
-        if (extraPadding < 0) extraPadding = 0;
-        el.style.paddingTop = (basePaddingTop + (pullingTop ? extraPadding : 0)) + 'px';
-        el.style.paddingBottom = (basePaddingBottom + (pullingBottom ? extraPadding : 0)) + 'px';
-        animationFrame = requestAnimationFrame(step);
-      } else {
-        el.style.paddingTop = basePaddingTop + 'px';
-        el.style.paddingBottom = basePaddingBottom + 'px';
-        pullingTop = false;
-        pullingBottom = false;
-      }
-    }
-    step();
-  }
 
   el.addEventListener('touchstart', e => {
     startY = e.touches[0].clientY;
@@ -134,25 +115,49 @@ document.querySelectorAll('.diov').forEach(el => {
 
     const scrollTop = el.scrollTop;
     const scrollHeight = el.scrollHeight;
-    const clientHeight = el.clientHeight;
+    const offsetHeight = el.offsetHeight;
 
+    // السحب للأسفل عند الوصول للأعلى
     if (scrollTop === 0 && deltaY > 0) {
-      // السحب للأسفل في الأعلى
       pullingTop = true;
-      pullingBottom = false;
-      extraPadding = Math.min(30, deltaY / 2); // زيادة تدريجية
-      el.style.paddingTop = (basePaddingTop + extraPadding) + 'px';
-    } else if (scrollTop + clientHeight >= scrollHeight && deltaY < 0) {
-      // السحب للأعلى في الأسفل
-      pullingTop = false;
+      let pad = Math.min(maxPull, deltaY / 2);
+      el.style.paddingTop = (basePaddingTop + pad) + 'px';
+      e.preventDefault(); // منع التمرير الافتراضي
+    }
+
+    // السحب للأعلى عند الوصول للأسفل
+    if (scrollTop + offsetHeight >= scrollHeight && deltaY < 0) {
       pullingBottom = true;
-      extraPadding = Math.min(30, -deltaY / 2);
-      el.style.paddingBottom = (basePaddingBottom + extraPadding) + 'px';
+      let pad = Math.min(maxPull, -deltaY / 2);
+      el.style.paddingBottom = (basePaddingBottom + pad) + 'px';
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  el.addEventListener('touchend', () => {
+    // إرجاع البادينج تدريجياً
+    if (pullingTop || pullingBottom) {
+      let top = parseFloat(el.style.paddingTop) || basePaddingTop;
+      let bottom = parseFloat(el.style.paddingBottom) || basePaddingBottom;
+
+      const anim = setInterval(() => {
+        let done = true;
+        if (top > basePaddingTop) {
+          top -= 2; // سرعة الإرجاع
+          if (top < basePaddingTop) top = basePaddingTop;
+          el.style.paddingTop = top + 'px';
+          done = false;
+        }
+        if (bottom > basePaddingBottom) {
+          bottom -= 2;
+          if (bottom < basePaddingBottom) bottom = basePaddingBottom;
+          el.style.paddingBottom = bottom + 'px';
+          done = false;
+        }
+        if (done) clearInterval(anim);
+      }, 10);
     }
   });
-
-  el.addEventListener('touchend', resetPadding);
-  el.addEventListener('touchcancel', resetPadding);
 });
 
 
