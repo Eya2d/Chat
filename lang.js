@@ -92,27 +92,7 @@
 
 
 
-function enablePullEffect(el) {
-
-  // منع التفعيل المكرر
-  if (el._pullEnabled) return;
-  el._pullEnabled = true;
-
-  /* =========================
-     🔹 إنشاء Wrapper للمحتوى
-     ========================= */
-  let content = el.querySelector('.pull-content');
-  if (!content) {
-    content = document.createElement('div');
-    content.className = 'pull-content';
-
-    while (el.firstChild) {
-      content.appendChild(el.firstChild);
-    }
-    el.appendChild(content);
-  }
-
-  // قراءة البادينج الأصلي
+document.querySelectorAll('.diov').forEach(el => {
   const style = getComputedStyle(el);
   const basePaddingTop = parseFloat(style.paddingTop) || 0;
   const basePaddingBottom = parseFloat(style.paddingBottom) || 0;
@@ -120,97 +100,59 @@ function enablePullEffect(el) {
   let startY = 0;
   let pullingTop = false;
   let pullingBottom = false;
-  let isTicking = false;
+  let extraPadding = 0;
+  let animationFrame = null;
 
-  // قيم السلاسة
-  const MAX_EXTRA = 26;
-  const RESISTANCE = 5.5;
-  const DRAG_THRESHOLD = 10; // لمنع التحريك الوهمي
-
-  let currentTop = basePaddingTop;
-  let currentBottom = basePaddingBottom;
-  let currentOffset = 0; // 🔹 transform
-
-  el.style.overflowY = 'auto';
-  el.style.webkitOverflowScrolling = 'touch';
-  content.style.willChange = 'transform';
-
-  function applyEffects() {
-    el.style.paddingTop = currentTop + 'px';
-    el.style.paddingBottom = currentBottom + 'px';
-    content.style.transform = `translateY(${currentOffset}px)`;
+  function resetPadding() {
+    if (animationFrame) cancelAnimationFrame(animationFrame);
+    function step() {
+      if (extraPadding > 0) {
+        extraPadding -= 2; // سرعة التراجع
+        if (extraPadding < 0) extraPadding = 0;
+        el.style.paddingTop = (basePaddingTop + (pullingTop ? extraPadding : 0)) + 'px';
+        el.style.paddingBottom = (basePaddingBottom + (pullingBottom ? extraPadding : 0)) + 'px';
+        animationFrame = requestAnimationFrame(step);
+      } else {
+        el.style.paddingTop = basePaddingTop + 'px';
+        el.style.paddingBottom = basePaddingBottom + 'px';
+        pullingTop = false;
+        pullingBottom = false;
+      }
+    }
+    step();
   }
 
   el.addEventListener('touchstart', e => {
     startY = e.touches[0].clientY;
     pullingTop = false;
     pullingBottom = false;
-    isTicking = false;
-    el.style.transition = 'none';
-    content.style.transition = 'none';
-  }, { passive: true });
+  });
 
   el.addEventListener('touchmove', e => {
     const currentY = e.touches[0].clientY;
-    const diff = currentY - startY;
+    const deltaY = currentY - startY;
 
-    // تجاهل التحريك الوهمي الصغير
-    if (Math.abs(diff) < DRAG_THRESHOLD) return;
+    const scrollTop = el.scrollTop;
+    const scrollHeight = el.scrollHeight;
+    const clientHeight = el.clientHeight;
 
-    const atTop = el.scrollTop <= 0;
-    const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
-
-    if (!pullingTop && !pullingBottom) {
-      if (diff > 0 && atTop) pullingTop = true;
-      else if (diff < 0 && atBottom) pullingBottom = true;
-      else return;
+    if (scrollTop === 0 && deltaY > 0) {
+      // السحب للأسفل في الأعلى
+      pullingTop = true;
+      pullingBottom = false;
+      extraPadding = Math.min(30, deltaY / 2); // زيادة تدريجية
+      el.style.paddingTop = (basePaddingTop + extraPadding) + 'px';
+    } else if (scrollTop + clientHeight >= scrollHeight && deltaY < 0) {
+      // السحب للأعلى في الأسفل
+      pullingTop = false;
+      pullingBottom = true;
+      extraPadding = Math.min(30, -deltaY / 2);
+      el.style.paddingBottom = (basePaddingBottom + extraPadding) + 'px';
     }
+  });
 
-    if (isTicking) return;
-    isTicking = true;
-
-    requestAnimationFrame(() => {
-      if (pullingTop && diff > 0) {
-        const extra = Math.min(diff / RESISTANCE, MAX_EXTRA);
-        currentTop = basePaddingTop + extra;
-        currentOffset = extra; // دفع المحتوى للأعلى
-      }
-      if (pullingBottom && diff < 0) {
-        const extra = Math.min(Math.abs(diff) / RESISTANCE, MAX_EXTRA);
-        currentBottom = basePaddingBottom + extra;
-        currentOffset = -extra; // دفع المحتوى للأسفل
-      }
-
-      applyEffects();
-      isTicking = false;
-    });
-
-  }, { passive: true });
-
-  function reset() {
-    el.style.transition =
-      'padding 0.45s cubic-bezier(0.22, 0.61, 0.36, 1)';
-    content.style.transition =
-      'transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1)';
-
-    currentTop = basePaddingTop;
-    currentBottom = basePaddingBottom;
-    currentOffset = 0;
-
-    applyEffects();
-    pullingTop = false;
-    pullingBottom = false;
-  }
-
-  el.addEventListener('touchend', reset);
-  el.addEventListener('touchcancel', reset);
-}
-
-/* =========================
-   🔹 التفعيل الحالي
-   ========================= */
-document.querySelectorAll('.diov').forEach(el => {
-  enablePullEffect(el);
+  el.addEventListener('touchend', resetPadding);
+  el.addEventListener('touchcancel', resetPadding);
 });
 
 
