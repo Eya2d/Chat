@@ -94,82 +94,86 @@
 
 function enablePullEffect(el) {
 
+  // منع التفعيل المكرر
   if (el._pullEnabled) return;
   el._pullEnabled = true;
 
+  /* =========================
+     🔹 إنشاء Wrapper للمحتوى
+     ========================= */
+  let content = el.querySelector('.pull-content');
+  if (!content) {
+    content = document.createElement('div');
+    content.className = 'pull-content';
+
+    while (el.firstChild) {
+      content.appendChild(el.firstChild);
+    }
+    el.appendChild(content);
+  }
+
+  // قراءة البادينج الأصلي
   const style = getComputedStyle(el);
   const basePaddingTop = parseFloat(style.paddingTop) || 0;
   const basePaddingBottom = parseFloat(style.paddingBottom) || 0;
 
   let startY = 0;
-  let lastY = 0;
   let pullingTop = false;
   let pullingBottom = false;
-  let directionLocked = false;
 
+  // قيم سلاسة غير ملحوظة
   const MAX_EXTRA = 26;
   const RESISTANCE = 5.5;
-  const DRAG_THRESHOLD = 10; // 🔑 يمنع التفعيل الوهمي
 
   let currentTop = basePaddingTop;
   let currentBottom = basePaddingBottom;
+  let currentOffset = 0; // 🔹 transform
   let raf = null;
 
   el.style.overflowY = 'auto';
   el.style.webkitOverflowScrolling = 'touch';
+  content.style.willChange = 'transform';
 
-  function applyPadding() {
+  function applyEffects() {
     el.style.paddingTop = currentTop + 'px';
     el.style.paddingBottom = currentBottom + 'px';
+    content.style.transform = `translateY(${currentOffset}px)`;
   }
 
   el.addEventListener('touchstart', e => {
-    startY = lastY = e.touches[0].clientY;
-    pullingTop = pullingBottom = false;
-    directionLocked = false;
+    startY = e.touches[0].clientY;
+    pullingTop = false;
+    pullingBottom = false;
     el.style.transition = 'none';
+    content.style.transition = 'none';
     cancelAnimationFrame(raf);
   }, { passive: true });
 
   el.addEventListener('touchmove', e => {
     const currentY = e.touches[0].clientY;
     const diff = currentY - startY;
-    const delta = currentY - lastY;
-    lastY = currentY;
-
-    // 🔒 تجاهل الحركات الوهمية الصغيرة
-    if (Math.abs(diff) < DRAG_THRESHOLD) return;
 
     const atTop = el.scrollTop <= 0;
-    const atBottom =
-      el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+    const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
 
-    // 🔐 قفل الاتجاه مرة واحدة فقط
-    if (!directionLocked) {
-      if (diff > 0 && atTop) {
-        pullingTop = true;
-        directionLocked = true;
-      } else if (diff < 0 && atBottom) {
-        pullingBottom = true;
-        directionLocked = true;
-      } else {
-        return;
-      }
-    }
+    if (atTop && diff > 0) pullingTop = true;
+    if (atBottom && diff < 0) pullingBottom = true;
 
     raf = requestAnimationFrame(() => {
 
       if (pullingTop && diff > 0) {
         const extra = Math.min(diff / RESISTANCE, MAX_EXTRA);
         currentTop = basePaddingTop + extra;
+        currentOffset = extra; // 🔹 دفع المحتوى
       }
 
       if (pullingBottom && diff < 0) {
         const extra = Math.min(Math.abs(diff) / RESISTANCE, MAX_EXTRA);
         currentBottom = basePaddingBottom + extra;
+        currentOffset = -extra; // 🔹 دفع المحتوى
       }
 
-      applyPadding();
+      applyEffects();
     });
 
   }, { passive: true });
@@ -177,18 +181,25 @@ function enablePullEffect(el) {
   function reset() {
     el.style.transition =
       'padding 0.45s cubic-bezier(0.22, 0.61, 0.36, 1)';
+    content.style.transition =
+      'transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1)';
+
     currentTop = basePaddingTop;
     currentBottom = basePaddingBottom;
-    applyPadding();
-    pullingTop = pullingBottom = false;
-    directionLocked = false;
+    currentOffset = 0;
+
+    applyEffects();
+    pullingTop = false;
+    pullingBottom = false;
   }
 
   el.addEventListener('touchend', reset);
   el.addEventListener('touchcancel', reset);
 }
 
-/* التفعيل */
+/* =========================
+   🔹 التفعيل الحالي (كما هو)
+   ========================= */
 document.querySelectorAll('.diov').forEach(el => {
   enablePullEffect(el);
 });
