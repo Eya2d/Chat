@@ -132,22 +132,21 @@ function createBox(id) {
 
   document.body.appendChild(clone);
 
-  // ✅ إضافة كلاس للـ body عند الظهور
+  // ✅ إضافة كلاس body
   document.body.classList.add('joo');
 
-  // 🔥 إعادة تشغيل الأنيميشن بالقوة
-  clone.getBoundingClientRect();
+  // 🔥 تفعيل Pull Effect لكل عنصر diov داخل الـ box
+  clone.querySelectorAll('.diov').forEach(el => {
+    enablePullEffect(el);
+  });
 
+  // إعادة تشغيل الأنيميشن
+  clone.getBoundingClientRect();
   requestAnimationFrame(() => {
     clone.classList.add('popup-enter-active');
   });
 
   currentBox = clone;
-  isAnimating = true;
-
-  clone.addEventListener('transitionend', () => {
-    isAnimating = false;
-  }, { once: true });
 }
 
 function closeBox() {
