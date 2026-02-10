@@ -111,7 +111,6 @@ observer.observe(document.body, {
 
 let currentBox = null;
 let pendingBoxId = null;
-let isAnimating = false;
 
 function openBox(id) {
   if (currentBox) {
@@ -124,6 +123,8 @@ function openBox(id) {
 
 function createBox(id) {
   const template = document.getElementById(`${id}-content`);
+  if (!template) return;
+
   const clone = template.cloneNode(true);
 
   clone.style.display = 'flex';
@@ -152,11 +153,10 @@ function createBox(id) {
 function closeBox() {
   if (!currentBox) return;
 
-  // إذا كان ما زال في الدخول → أوقفه
   currentBox.classList.remove('popup-enter-active');
   currentBox.classList.remove('popup-enter');
 
-  // 🔥 Reflow
+  // Reflow لإعادة الأنيميشن
   currentBox.getBoundingClientRect();
 
   currentBox.classList.add('popup-exit');
@@ -176,6 +176,68 @@ function closeBox() {
   }, { once: true });
 }
 
+/* ==============================
+   Enable Pull Effect for diov
+   ============================== */
+function enablePullEffect(el) {
+  const style = getComputedStyle(el);
+  const basePaddingTop = parseFloat(style.paddingTop) || 0;
+  const basePaddingBottom = parseFloat(style.paddingBottom) || 0;
 
+  let startY = 0;
+  let pullingTop = false;
+  let pullingBottom = false;
+  let extraPadding = 0;
+  let animationFrame = null;
+
+  function resetPadding() {
+    if (animationFrame) cancelAnimationFrame(animationFrame);
+    function step() {
+      if (extraPadding > 0) {
+        extraPadding -= 2; // سرعة التراجع
+        if (extraPadding < 0) extraPadding = 0;
+        el.style.paddingTop = (basePaddingTop + (pullingTop ? extraPadding : 0)) + 'px';
+        el.style.paddingBottom = (basePaddingBottom + (pullingBottom ? extraPadding : 0)) + 'px';
+        animationFrame = requestAnimationFrame(step);
+      } else {
+        el.style.paddingTop = basePaddingTop + 'px';
+        el.style.paddingBottom = basePaddingBottom + 'px';
+        pullingTop = false;
+        pullingBottom = false;
+      }
+    }
+    step();
+  }
+
+  el.addEventListener('touchstart', e => {
+    startY = e.touches[0].clientY;
+    pullingTop = false;
+    pullingBottom = false;
+  });
+
+  el.addEventListener('touchmove', e => {
+    const currentY = e.touches[0].clientY;
+    const deltaY = currentY - startY;
+
+    const scrollTop = el.scrollTop;
+    const scrollHeight = el.scrollHeight;
+    const clientHeight = el.clientHeight;
+
+    if (scrollTop === 0 && deltaY > 0) {
+      pullingTop = true;
+      pullingBottom = false;
+      extraPadding = Math.min(30, deltaY / 2);
+      el.style.paddingTop = (basePaddingTop + extraPadding) + 'px';
+    } else if (scrollTop + clientHeight >= scrollHeight && deltaY < 0) {
+      pullingTop = false;
+      pullingBottom = true;
+      extraPadding = Math.min(30, -deltaY / 2);
+      el.style.paddingBottom = (basePaddingBottom + extraPadding) + 'px';
+    }
+  });
+
+  el.addEventListener('touchend', resetPadding);
+  el.addEventListener('touchcancel', resetPadding);
+}
 
 
