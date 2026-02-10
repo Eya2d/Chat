@@ -6,6 +6,9 @@ window.onload = () => {
     const shareBtn = document.getElementById('shareBtn');
     const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
     const spinner = document.getElementById('spinner');
+    const messagePreviewModal = document.getElementById('messagePreviewModal');
+    const closePreviewBtn = document.getElementById('closePreviewBtn');
+    const previewContent = document.getElementById('messagePreviewContent');
     
     let selectedIndex = 0;
     let isNavigatingWithArrows = false;
@@ -180,45 +183,44 @@ window.onload = () => {
     // ======== معاينة الرسالة الطويلة ========
     function showMessagePreview(messageElement) {
         const messageContent = messageElement.textContent || messageElement.innerText;
-        const previewContent = document.getElementById('messagePreviewContent');
-        const previewModal = document.getElementById('messagePreviewModal');
         
         // تعيين محتوى الرسالة
         previewContent.textContent = messageContent;
         
         // إظهار المودال
-        previewModal.style.display = 'flex';
+        messagePreviewModal.style.display = 'flex';
         
         // إضافة كلاس joo للـ body
         document.body.classList.add('joo');
         
         // منع التمرير
         document.body.style.overflow = 'hidden';
-        
-        // إضافة حدث الإغلاق
-        document.getElementById('closePreviewBtn').onclick = closeMessagePreview;
+    }
+    
+    function closeMessagePreview() {
+        messagePreviewModal.style.display = 'none';
+        document.body.classList.remove('joo');
+        document.body.style.overflow = '';
+    }
+
+    // ======== إضافة أحداث إغلاق المودال ========
+    function setupPreviewModalEvents() {
+        // إغلاق عند النقر على زر الإغلاق
+        closePreviewBtn.addEventListener('click', closeMessagePreview);
         
         // إغلاق عند النقر خارج المحتوى
-        previewModal.addEventListener('click', function(e) {
-            if (e.target === previewModal) {
+        messagePreviewModal.addEventListener('click', function(e) {
+            if (e.target === messagePreviewModal) {
                 closeMessagePreview();
             }
         });
         
         // إغلاق بـ Esc
         document.addEventListener('keydown', function closeOnEsc(e) {
-            if (e.key === 'Escape') {
+            if (e.key === 'Escape' && messagePreviewModal.style.display === 'flex') {
                 closeMessagePreview();
-                document.removeEventListener('keydown', closeOnEsc);
             }
         });
-    }
-    
-    function closeMessagePreview() {
-        const previewModal = document.getElementById('messagePreviewModal');
-        previewModal.style.display = 'none';
-        document.body.classList.remove('joo');
-        document.body.style.overflow = '';
     }
 
     // ======== التحكم في زر النزول لأسفل ========
@@ -1749,6 +1751,9 @@ window.onload = () => {
             showMessagePreview(messageElement);
         }
     });
+
+    // ======== إعداد أحداث المودال مرة واحدة ========
+    setupPreviewModalEvents();
 
     // ======== تحميل عند البداية ========
     loadMessages();
