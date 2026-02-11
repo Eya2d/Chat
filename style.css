@@ -110,7 +110,7 @@ svg,ion-icon {
 .button:hover {
     background: #aca1ff42;
 }
-.button .ripple, .scr-top .ripple, .menu .ripple, .chat-div .ripple, .box1 a .ripple {
+.button .ripple, .scr-top .ripple, .menu .ripple, .chat-div .ripple, .box1 a .ripple, .suggestion-button .ripple {
     background-color: #aca1ff26;
 }
 .more-btn .ripple {
