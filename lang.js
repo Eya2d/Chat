@@ -395,3 +395,10 @@ document.addEventListener("contextmenu", function (e) {
   document.documentElement.style.zoom = "100%";
 
 })();
+
+
+
+
+
+
+
