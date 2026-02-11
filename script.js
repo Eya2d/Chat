@@ -21,8 +21,8 @@ window.onload = () => {
     let typingInProgress = false;
 
     // ثوابت التحديثات
-    const LONG_MESSAGE_THRESHOLD = 600; // تغيير من 200 إلى 600
-    const LONG_MESSAGE_LINES_THRESHOLD = 25; // زيادة من 15 إلى 25 سطر
+    const LONG_MESSAGE_THRESHOLD = 600;
+    const LONG_MESSAGE_LINES_THRESHOLD = 25;
 
     // ======== قائمة الرسائل الترحيبية المختلفة ========
     const welcomeMessages = [
@@ -61,10 +61,8 @@ window.onload = () => {
         const icon = copyBtn.querySelector('ion-icon');
         const originalIcon = icon.getAttribute('name');
         
-        // تغيير الأيقونة إلى علامة الصح
         icon.setAttribute('name', 'checkmark-outline');
         
-        // إعادة الأيقونة الأصلية بعد ثانية
         setTimeout(() => {
             icon.setAttribute('name', originalIcon);
         }, 1000);
@@ -78,17 +76,15 @@ window.onload = () => {
         const textSpan = txtBtn.querySelector('.btn-text');
         
         if (message.classList.contains('collapsed')) {
-            // إرجاع الرسالة إلى طولها الأصلي (Long)
             message.classList.remove('collapsed');
             message.classList.remove('Wave-cloud');
             message.style.maxHeight = 'none';
             icon.setAttribute('name', 'reorder-three-outline');
             textSpan.textContent = 'Short';
         } else {
-            // تقليص الرسالة إلى 70% من ارتفاعها (تظهر 70% فقط)
             message.classList.add('collapsed');
             const currentHeight = message.scrollHeight;
-            message.style.maxHeight = (currentHeight * 0.6) + 'px'; // 70% من الارتفاع
+            message.style.maxHeight = (currentHeight * 0.6) + 'px';
             icon.setAttribute('name', 'reorder-four-outline');
             textSpan.textContent = 'Long';
         }
@@ -97,12 +93,10 @@ window.onload = () => {
     // ======== تطبيق الوضع الافتراضي (Short) على الرسالة ========
     function applyDefaultShortState(messageElement, txtBtn) {
         if (messageElement && txtBtn) {
-            // جعل الرسالة في وضع Short (تظهر 70% فقط)
             messageElement.classList.add('collapsed');
             const currentHeight = messageElement.scrollHeight;
-            messageElement.style.maxHeight = (currentHeight * 0.6) + 'px'; // 70% من الارتفاع
+            messageElement.style.maxHeight = (currentHeight * 0.6) + 'px';
             
-            // تحديث زر txt-btn ليكون في وضع Short (الزر الأول يظهر كـ Short)
             const icon = txtBtn.querySelector('ion-icon');
             const textSpan = txtBtn.querySelector('.btn-text');
             icon.setAttribute('name', 'reorder-four-outline');
@@ -161,26 +155,20 @@ window.onload = () => {
         const chatDiv = wrapper.querySelector('.chat-div');
         
         if (message && txtBtn && chatDiv) {
-            // حساب طول النص
             const messageText = message.textContent || message.innerText;
             const textLength = messageText.length;
             
-            // حساب عدد الأسطر
             const lineHeight = parseInt(getComputedStyle(message).lineHeight) || 20;
             const messageHeight = message.scrollHeight;
             const numberOfLines = Math.round(messageHeight / lineHeight);
             
             if (textLength > LONG_MESSAGE_THRESHOLD || numberOfLines >= LONG_MESSAGE_LINES_THRESHOLD) {
-                // إظهار وإضافة txt-btn للرسائل الطويلة
                 txtBtn.style.display = 'flex';
-                // تطبيق الوضع الافتراضي (Short)
                 applyDefaultShortState(message, txtBtn);
             } else {
-                // إخفاء txt-btn للرسائل القصيرة
                 txtBtn.style.display = 'none';
             }
             
-            // إظهار chat-div للرسائل غير الترحيبية
             if (!welcomeMessages.some(msg => messageText.includes(msg))) {
                 chatDiv.classList.add('show');
             }
@@ -197,10 +185,8 @@ window.onload = () => {
             if (message && chatDiv && !welcomeMessages.some(msg => message.textContent.includes(msg))) {
                 chatDiv.classList.add('show');
                 
-                // إعادة ربط الأحداث باستخدام الدالة الجديدة
                 rebindMessageEventsForWrapper(wrapper);
                 
-                // تحديث زر txt-btn بناءً على طول النص
                 updateTxtBtnForSavedMessages(wrapper);
             }
         });
@@ -210,16 +196,12 @@ window.onload = () => {
     function showMessagePreview(messageElement) {
         const messageContent = messageElement.textContent || messageElement.innerText;
         
-        // تعيين محتوى الرسالة
         previewContent.textContent = messageContent;
         
-        // إظهار المودال
         messagePreviewModal.style.display = 'flex';
         
-        // إضافة كلاس joo للـ body
         document.body.classList.add('joo');
         
-        // منع التمرير
         document.body.style.overflow = 'hidden';
     }
     
@@ -231,17 +213,14 @@ window.onload = () => {
 
     // ======== إضافة أحداث إغلاق المودال ========
     function setupPreviewModalEvents() {
-        // إغلاق عند النقر على زر الإغلاق
         closePreviewBtn.addEventListener('click', closeMessagePreview);
         
-        // إغلاق عند النقر خارج المحتوى
         messagePreviewModal.addEventListener('click', function(e) {
             if (e.target === messagePreviewModal) {
                 closeMessagePreview();
             }
         });
         
-        // إغلاق بـ Esc
         document.addEventListener('keydown', function closeOnEsc(e) {
             if (e.key === 'Escape' && messagePreviewModal.style.display === 'flex') {
                 closeMessagePreview();
@@ -441,10 +420,8 @@ window.onload = () => {
     function loadMessages() {
         const saved = localStorage.getItem('chatMessages');
         if (saved) {
-            // إضافة المحتوى المحفوظ مباشرة إلى DOM
             messagesDiv.innerHTML = saved;
             
-            // التأكد من أن الرسائل تظهر في الأسفل
             setTimeout(() => {
                 scrollToBottomImmediate();
             }, 50);
@@ -453,7 +430,6 @@ window.onload = () => {
             }, 200);
             setTimeout(toggleScrollButton, 100);
             
-            // إعادة ربط الأحداث للرسائل المحفوظة وتطبيق الوضع الافتراضي (Short)
             setTimeout(() => {
                 document.querySelectorAll('.bot-message-wrapper').forEach(wrapper => {
                     const message = wrapper.querySelector('.message');
@@ -463,33 +439,26 @@ window.onload = () => {
                     if (message && chatDiv && !welcomeMessages.some(msg => message.textContent.includes(msg))) {
                         chatDiv.classList.add('show');
                         
-                        // إعادة ربط أحداث النسخ والمشاركة
                         rebindMessageEventsForWrapper(wrapper);
                         
-                        // تحديث زر txt-btn بناءً على طول النص (الحد الجديد 600 حرف)
                         const messageText = message.textContent || message.innerText;
                         const textLength = messageText.length;
                         
-                        // حساب عدد الأسطر
                         const lineHeight = parseInt(getComputedStyle(message).lineHeight) || 20;
                         const messageHeight = message.scrollHeight;
                         const numberOfLines = Math.round(messageHeight / lineHeight);
                         
                         if (txtBtn) {
                             if (textLength > LONG_MESSAGE_THRESHOLD || numberOfLines >= LONG_MESSAGE_LINES_THRESHOLD) {
-                                // إظهار وإضافة txt-btn للرسائل الطويلة
                                 txtBtn.style.display = 'flex';
-                                // تطبيق الوضع الافتراضي (70%) للرسائل المحفوظة
                                 applyDefaultShortState(message, txtBtn);
                             } else {
-                                // إخفاء زر txt-btn إذا كانت الرسالة قصيرة
                                 txtBtn.style.display = 'none';
                             }
                         }
                     }
                 });
                 
-                // إضافة زر txt-btn للرسائل المحفوظة الطويلة التي لا تحتوي عليه
                 document.querySelectorAll('.bot-message-wrapper').forEach(wrapper => {
                     const message = wrapper.querySelector('.message');
                     const chatDiv = wrapper.querySelector('.chat-div');
@@ -499,19 +468,15 @@ window.onload = () => {
                         const messageText = message.textContent || message.innerText;
                         const textLength = messageText.length;
                         
-                        // حساب عدد الأسطر
                         const lineHeight = parseInt(getComputedStyle(message).lineHeight) || 20;
                         const messageHeight = message.scrollHeight;
                         const numberOfLines = Math.round(messageHeight / lineHeight);
                         
-                        // إذا كانت الرسالة طويلة (أكثر من 600 حرف أو 25 سطر) ولا تحتوي على txt-btn
                         if (textLength > LONG_MESSAGE_THRESHOLD || numberOfLines >= LONG_MESSAGE_LINES_THRESHOLD) {
-                            // إنشاء زر txt-btn جديد
                             const txtBtn = document.createElement('button');
                             txtBtn.className = 'txt-btn';
                             txtBtn.innerHTML = '<ion-icon name="reorder-four-outline"></ion-icon><span class="btn-text">Long</span>';
                             
-                            // إضافة زر txt-btn إلى chat-div
                             const copyBtn = wrapper.querySelector('.copy-btn');
                             if (copyBtn) {
                                 copyBtn.parentNode.insertBefore(txtBtn, copyBtn);
@@ -519,23 +484,18 @@ window.onload = () => {
                                 chatDiv.appendChild(txtBtn);
                             }
                             
-                            // تطبيق الوضع الافتراضي (Short)
                             applyDefaultShortState(message, txtBtn);
                             
-                            // إعادة ربط الأحداث للـ wrapper
                             rebindMessageEventsForWrapper(wrapper);
                         }
                     }
                 });
 
-                // إعادة ربط أحداث أزرار الاقتراحات للرسائل المحفوظة
                 document.querySelectorAll('.suggestions-container').forEach(container => {
                     const wrapper = container.closest('.bot-message-wrapper');
                     if (wrapper) {
-                        // إعادة ربط أحداث أزرار الاقتراحات
                         const suggestionButtons = container.querySelectorAll('.suggestion-button');
                         suggestionButtons.forEach(button => {
-                            // إزالة الأحداث القديمة
                             const newButton = button.cloneNode(true);
                             button.parentNode.replaceChild(newButton, button);
                             
@@ -544,21 +504,17 @@ window.onload = () => {
                                 e.stopPropagation();
                                 const suggestionText = newButton.textContent;
                                 
-                                // البحث عن السؤال المقابل في faq
                                 const matchingSuggestion = faq.find(item => item.q === suggestionText);
                                 if (matchingSuggestion) {
-                                    // إزالة ديف الاقتراحات
                                     if (container.parentNode) {
                                         container.remove();
                                         saveMessages();
                                     }
-                                    // معالجة السؤال المختار
                                     handleQuestion(matchingSuggestion);
                                 }
                             });
                         });
                         
-                        // إعادة ربط حدث زر الإغلاق
                         const closeBtn = container.querySelector('.closeBtn');
                         if (closeBtn) {
                             const newCloseBtn = closeBtn.cloneNode(true);
@@ -707,7 +663,7 @@ window.onload = () => {
         }
     }
 
-    // ======== إنشاء ديف الاقتراحات مع 6 أزرار ========
+    // ======== إنشاء ديف الاقتراحات مع 6 أزرار - مع التحميل التدريجي ========
     function createSuggestionsDiv(messageWrapper) {
         // الحصول على 6 اقتراحات عشوائية من الـ faq
         const randomSuggestions = [...faq]
@@ -717,10 +673,10 @@ window.onload = () => {
         // إنشاء عنصر الديف
         const suggestionsContainer = document.createElement('div');
         suggestionsContainer.className = 'suggestions-container Wave-all';
+        suggestionsContainer.id = 'suggestions';
         
         // إضافة عنوان
         const title = document.createElement('div');
-        // title.textContent = 'أسئلة مقترحة:';
         suggestionsContainer.appendChild(title);
         
         // إنشاء صف للأزرار
@@ -730,67 +686,80 @@ window.onload = () => {
         buttonRow.style.gap = '10px';
         buttonRow.style.justifyContent = 'flex-start';
         
-        // إضافة 6 أزرار
-        randomSuggestions.forEach(suggestion => {
-            const suggestionBtn = document.createElement('button');
-            suggestionBtn.className = 'suggestion-button';
-            suggestionBtn.textContent = suggestion.q;
+        // إضافة الأزرار بشكل تدريجي - كل زر بعد 1 ملي ثانية
+        randomSuggestions.forEach((suggestion, index) => {
+            setTimeout(() => {
+                const suggestionBtn = document.createElement('button');
+                suggestionBtn.className = 'suggestion-button';
+                suggestionBtn.textContent = suggestion.q;
+                
+                // حدث النقر على الزر
+                suggestionBtn.addEventListener('click', () => {
+                    // إزالة الديف
+                    if (suggestionsContainer.parentNode) {
+                        suggestionsContainer.remove();
+                        saveMessages();
+                    }
+                    
+                    // معالجة السؤال المختار
+                    handleQuestion(suggestion);
+                });
+                
+                buttonRow.appendChild(suggestionBtn);
+                
+                // بعد إضافة الزر، قم بالتمرير التلقائي لأسفل
+                if (index === randomSuggestions.length - 1) {
+                    setTimeout(() => {
+                        const messagesElement = document.getElementById('messages');
+                        if (messagesElement) {
+                            messagesElement.scrollTo({
+                                top: messagesElement.scrollHeight,
+                                behavior: 'smooth'
+                            });
+                        }
+                    }, 50);
+                }
+            }, index * 1); // 1 ملي ثانية بين كل زر والآخر
+        });
+        
+        // إضافة الأزرار بعد التأكد من إنشائها
+        setTimeout(() => {
+            suggestionsContainer.appendChild(buttonRow);
             
-            // حدث النقر على الزر
-            suggestionBtn.addEventListener('click', () => {
-                // إزالة الديف
+            // زر إغلاق
+            const closeBtn = document.createElement('button');
+            closeBtn.textContent = '×';
+            closeBtn.className = "closeBtn";
+            
+            closeBtn.addEventListener('click', () => {
                 if (suggestionsContainer.parentNode) {
                     suggestionsContainer.remove();
                     saveMessages();
                 }
-                
-                // معالجة السؤال المختار
-                handleQuestion(suggestion);
             });
             
-            buttonRow.appendChild(suggestionBtn);
-        });
-        
-        suggestionsContainer.appendChild(buttonRow);
-        
-        // زر إغلاق
-        const closeBtn = document.createElement('button');
-        closeBtn.textContent = '×';
-        closeBtn.className = "closeBtn";
-        
-        closeBtn.addEventListener('click', () => {
-            if (suggestionsContainer.parentNode) {
-                suggestionsContainer.remove();
-                saveMessages();
-            }
-        });
-        
-        suggestionsContainer.appendChild(closeBtn);
-        
-        // إضافة الديف بعد الرسالة
-        messageWrapper.appendChild(suggestionsContainer);
-        
-        // حفظ الرسائل مع الديف الجديد
-        saveMessages();
+            suggestionsContainer.appendChild(closeBtn);
+            
+            // إضافة الديف بعد الرسالة
+            messageWrapper.appendChild(suggestionsContainer);
+            
+            // حفظ الرسائل مع الديف الجديد
+            saveMessages();
+        }, randomSuggestions.length * 1); // الانتظار حتى يتم إنشاء جميع الأزرار
         
         return suggestionsContainer;
     }
 
     // ======== إضافة رسالة البوت مع تأثير الكتابة حرفًا حرفًا ========
     function addBotMessageWithTyping(text, isNew = true, isFirstChunk = false, onComplete = null, hasMoreParts = false, showSuggestions = false) {
-        // التحقق إذا كانت هذه رسالة ترحيبية
         const isWelcomeMessage = welcomeMessages.some(msg => text.includes(msg));
-        
-        // تحديد إذا كانت الرسالة لها أجزاء متعددة (أطول من 600 حرف - التحديث)
         const hasMultipleParts = text.length > LONG_MESSAGE_THRESHOLD;
         
-        // إنشاء HTML بناءً على نوع الرسالة
         const msgHTML = createMessageHTML(isWelcomeMessage, hasMultipleParts);
                     
         const wrapper = document.createElement('div');
         wrapper.innerHTML = msgHTML.trim();
                     
-        // الديف الداخلي (الذي فيه الرسالة)
         const msg = wrapper.querySelector('.message');
         const chatDiv = wrapper.querySelector('.chat-div');
         const txtBtn = wrapper.querySelector('.txt-btn');
@@ -798,7 +767,6 @@ window.onload = () => {
         messagesDiv.appendChild(wrapper);
         scrollToBottom();
                     
-        // ========== رسائل قديمة ==========
         if (!isNew) {
             const processedText = processTextWithImages(text);
         
@@ -858,11 +826,9 @@ window.onload = () => {
                 }
             }
         
-            // إظهار الأزرار للرسائل القديمة المحملة من الذاكرة
             if (chatDiv && !isWelcomeMessage) {
                 chatDiv.classList.add('show');
                 
-                // ربط أحداث النسخ والمشاركة وتبديل الطول
                 const copyBtn = wrapper.querySelector('.copy-btn');
                 const shareBtn = wrapper.querySelector('.share-btn');
                 
@@ -895,18 +861,15 @@ window.onload = () => {
                         toggleMessageHeight(txtBtn);
                     });
                     
-                    // التحقق من طول الرسالة للتحديث الجديد (600 حرف أو 25 سطر)
                     const lineHeight = parseInt(getComputedStyle(msg).lineHeight) || 20;
                     const messageHeight = msg.scrollHeight;
                     const numberOfLines = Math.round(messageHeight / lineHeight);
                     const textLength = text.length;
                     
                     if (textLength > LONG_MESSAGE_THRESHOLD || numberOfLines >= LONG_MESSAGE_LINES_THRESHOLD) {
-                        // تطبيق الوضع الافتراضي (70%) للرسائل المحفوظة الطويلة
                         applyDefaultShortState(msg, txtBtn);
                         txtBtn.style.display = 'flex';
                     } else {
-                        // إخفاء زر txt-btn إذا كانت الرسالة قصيرة
                         txtBtn.style.display = 'none';
                     }
                 }
@@ -917,7 +880,6 @@ window.onload = () => {
             return msg;
         }
     
-        // ========== تأثير الكتابة ==========
         let currentIndex = 0;
         const typingSpeed = 20;
         let spinnerShown = false;
@@ -932,19 +894,16 @@ window.onload = () => {
             if (currentIndex < text.length) {
                 const currentChar = text[currentIndex];
             
-                // إظهار spinner عند بدء الكتابة (وليس عند بدء ظهور الحروف)
                 if (!spinnerShown && typingInProgress) {
                     showSpinner();
                     spinnerShown = true;
                 }
             
-                // اكتشاف img<
                 if (currentChar === '<' && text.substring(currentIndex, currentIndex + 4).toLowerCase() === '<img') {
                     isInsideImageTag = true;
                     currentImageTag = '';
                 }
             
-                // داخل وسم img
                 if (isInsideImageTag) {
                     currentImageTag += currentChar;
                 
@@ -982,7 +941,6 @@ window.onload = () => {
                     }
                 }
             
-                // أقواس () للـ image tags
                 else if (!isInsideImageTag) {
                     if (currentChar === '(') {
                         isInsideParentheses = true;
@@ -1021,28 +979,22 @@ window.onload = () => {
                 saveMessages();
                 setTimeout(toggleScrollButton, 100);
                 
-                // إخفاء spinner عند اكتمال الكتابة
                 if (spinnerShown) {
                     hideSpinner();
                 }
                 
-                // إضافة وظائف النسخ والمشاركة بعد اكتمال الكتابة
                 if (!isWelcomeMessage && chatDiv) {
-                    // إظهار الأزرار فقط إذا لم يكن هناك أجزاء باقية
                     if (!hasMoreParts) {
                         chatDiv.classList.add('show');
                         
-                        // التحقق من طول الرسالة بعد اكتمال جميع الأجزاء
                         const lineHeight = parseInt(getComputedStyle(msg).lineHeight) || 20;
                         const messageHeight = msg.scrollHeight;
                         const numberOfLines = Math.round(messageHeight / lineHeight);
                         const textLength = text.length;
                         
                         if (hasMultipleParts && (textLength > LONG_MESSAGE_THRESHOLD || numberOfLines >= LONG_MESSAGE_LINES_THRESHOLD)) {
-                            // تطبيق الوضع الافتراضي (70%) فور اكتمال الأجزاء
                             applyDefaultShortState(msg, txtBtn);
                         } else {
-                            // إخفاء زر txt-btn إذا كانت الرسالة قصيرة أو ليس لها أجزاء متعددة
                             if (txtBtn) {
                                 txtBtn.style.display = 'none';
                             }
@@ -1055,7 +1007,6 @@ window.onload = () => {
                     if (copyBtn) {
                         copyBtn.addEventListener('click', () => {
                             navigator.clipboard.writeText(text).then(() => {
-                                // تغيير أيقونة النسخ عند النقر
                                 changeCopyIcon(copyBtn);
                             });
                         });
@@ -1083,7 +1034,6 @@ window.onload = () => {
                         });
                     }
                     
-                    // إضافة ديف الاقتراحات بعد اكتمال الرسالة
                     if (showSuggestions && !hasMoreParts) {
                         setTimeout(() => {
                             createSuggestionsDiv(wrapper);
@@ -1095,7 +1045,6 @@ window.onload = () => {
             }
         }
     
-        // تعيين حالة الكتابة كجارية
         typingInProgress = true;
         setTimeout(typeCharacter, 100);
         return msg;
@@ -1161,7 +1110,6 @@ window.onload = () => {
                 const isFirstChunk = (currentIndex === 0);
                 const hasMoreParts = (currentIndex < chunks.length - 1);
                 
-                // إذا كانت هذه هي المرة الأولى، أنشئ رسالة جديدة
                 if (isFirstChunk) {
                     currentMessage = addBotMessageWithTyping(chunks[currentIndex], true, isFirstChunk, () => {
                         currentIndex++;
@@ -1171,7 +1119,6 @@ window.onload = () => {
                                 buttonDiv = createMoreButton(showNextChunk);
                             }, 300);
                         } else {
-                            // إظهار الأزرار عند اكتمال جميع الأجزاء
                             if (currentWrapper) {
                                 const chatDiv = currentWrapper.querySelector('.chat-div');
                                 if (chatDiv) {
@@ -1182,14 +1129,11 @@ window.onload = () => {
                         }
                     }, hasMoreParts);
                     
-                    // الحصول على الـ wrapper الحالي
                     currentWrapper = currentMessage.closest('.bot-message-wrapper');
                 } else {
-                    // إذا كانت رسالة موجودة بالفعل، أضف النص إليها
                     const textToAdd = chunks[currentIndex];
                     const hasMoreParts = (currentIndex < chunks.length - 1);
                     
-                    // استخدم تأثير الكتابة لإضافة النص إلى الرسالة الحالية
                     addTextToExistingMessage(currentMessage, textToAdd, () => {
                         currentIndex++;
                         
@@ -1198,7 +1142,6 @@ window.onload = () => {
                                 buttonDiv = createMoreButton(showNextChunk);
                             }, 300);
                         } else {
-                            // إظهار الأزرار عند اكتمال جميع الأجزاء
                             if (currentWrapper) {
                                 const chatDiv = currentWrapper.querySelector('.chat-div');
                                 if (chatDiv) {
@@ -1212,7 +1155,6 @@ window.onload = () => {
             }
         }
 
-        // بدء عرض الجزء الأول
         showNextChunk();
     }
 
@@ -1230,7 +1172,6 @@ window.onload = () => {
             if (currentIndex < text.length) {
                 const currentChar = text[currentIndex];
                 
-                // إظهار spinner عند بدء الكتابة
                 if (!spinnerShown && typingInProgress) {
                     showSpinner();
                     spinnerShown = true;
@@ -1322,12 +1263,10 @@ window.onload = () => {
                 
                 setTimeout(toggleScrollButton, 100);
                 
-                // إخفاء spinner عند اكتمال الكتابة
                 if (spinnerShown) {
                     hideSpinner();
                 }
                 
-                // إظهار الأزرار فقط إذا لم يكن هناك أجزاء باقية
                 if (!hasMoreParts) {
                     const wrapper = messageElement.closest('.bot-message-wrapper');
                     if (wrapper) {
@@ -1336,7 +1275,6 @@ window.onload = () => {
                             chatDiv.classList.add('show');
                         }
                         
-                        // إضافة ديف الاقتراحات بعد اكتمال الرسالة
                         setTimeout(() => {
                             createSuggestionsDiv(wrapper);
                         }, 500);
@@ -1347,7 +1285,6 @@ window.onload = () => {
             }
         }
         
-        // تعيين حالة الكتابة كجارية
         typingInProgress = true;
         setTimeout(() => {
             typeCharacter();
@@ -1409,7 +1346,6 @@ window.onload = () => {
                 let matchScore = 0;
                 let foundWords = [];
                 
-                // البحث في النص العادي
                 searchWords.forEach(word => {
                     if (ayahText.includes(word)) {
                         matchScore += word.length;
@@ -1421,13 +1357,12 @@ window.onload = () => {
                     }
                 });
                 
-                // البحث داخل الأقواس () بشكل منفصل
                 const parenthesesContent = ayahPart.match(/\(([^)]+)\)/g) || [];
                 parenthesesContent.forEach(parenthesesText => {
                     const cleanParenthesesText = parenthesesText.toLowerCase();
                     searchWords.forEach(word => {
                         if (cleanParenthesesText.includes(word)) {
-                            matchScore += word.length * 2; // زيادة الوزن للبحث داخل الأقواس
+                            matchScore += word.length * 2;
                             if (!foundWords.includes(word)) {
                                 foundWords.push(word);
                             }
@@ -1672,7 +1607,6 @@ window.onload = () => {
             /سورة\s*([\u0600-\u06FF\s]+)\s*(\d+)/i,
             /([\u0600-\u06FF\s]+)\s*(?:آية|اية)\s*(\d+)/i,
             /سوره\s*([\u0600-\u06FF\s]+)\s*(\d+)/i,
-            // النمط الجديد للبحث المباشر: اسم السورة متبوعًا برقم الآية
             /^([\u0600-\u06FF\s]+)\s+(\d+)$/i
         ];
 
@@ -1790,10 +1724,8 @@ window.onload = () => {
             if (container) container.remove();
         });
 
-        // إخفاء جميع صناديق الاقتراحات قبل معالجة السؤال الجديد
         hideAllSuggestionsContainers();
 
-        // إظهار spinner
         showSpinner();
 
         let userQuestion = "";
@@ -1863,9 +1795,7 @@ window.onload = () => {
         if (confirm("هل تريد حقًا بدء محادثة جديدة؟ سيتم حذف جميع الرسائل الحالية.")) {
             messagesDiv.innerHTML = '';
             localStorage.removeItem('chatMessages');
-            // إخفاء زر النزول لأسفل عند بدء محادثة جديدة
             scrollToBottomBtn.classList.remove('show');
-            // إضافة رسالة ترحيبية عشوائية عند بدء محادثة جديدة
             const randomWelcomeMessage = getRandomWelcomeMessage();
             addBotMessageWithTyping(randomWelcomeMessage, false);
         }
@@ -1895,7 +1825,6 @@ window.onload = () => {
                 updateSelectedSuggestion();
                 scrollSelectedIntoView();
             } else {
-                // إذا لم تكن هناك اقتراحات، تحديث الاقتراحات بناءً على نص البحث
                 updateSuggestions(searchInput.value);
                 setTimeout(() => {
                     const newButtons = suggestionsDiv.querySelectorAll('.suggestion-btn');
@@ -1961,7 +1890,6 @@ window.onload = () => {
 
     // ======== إضافة حدث النقر على الرسائل الطويلة ========
     document.addEventListener('click', function(e) {
-        // البحث عن أقرب عنصر يحمل الكلاسات المطلوبة
         const messageElement = e.target.closest('.message.bot.new.typing-message.collapsed');
         
         if (messageElement && !e.target.closest('.chat-div')) {
@@ -1971,28 +1899,23 @@ window.onload = () => {
 
     // Event Delegation لأزرار الاقتراحات
     document.addEventListener('click', function(e) {
-        // التحقق مما إذا كان النقر على زر اقتراح
         if (e.target.classList.contains('suggestion-button')) {
             e.preventDefault();
             e.stopPropagation();
             
             const suggestionText = e.target.textContent;
             
-            // البحث عن السؤال المقابل في faq
             const matchingSuggestion = faq.find(item => item.q === suggestionText);
             if (matchingSuggestion) {
-                // إزالة الـ container إذا كان موجودًا
                 const suggestionsContainer = e.target.closest('.suggestions-container');
                 if (suggestionsContainer) {
                     suggestionsContainer.remove();
                     saveMessages();
                 }
-                // معالجة السؤال
                 handleQuestion(matchingSuggestion);
             }
         }
         
-        // التحقق مما إذا كان النقر على زر إغلاق
         if (e.target.classList.contains('closeBtn')) {
             e.preventDefault();
             e.stopPropagation();
@@ -2016,12 +1939,10 @@ window.onload = () => {
     }
     searchInput.focus();
     
-    // التأكد من أن الرسائل تظهر في الأسفل عند التحميل
     setTimeout(() => {
         scrollToBottomImmediate();
     }, 100);
     
-    // التأكد مرة أخرى بعد فترة قصيرة
     setTimeout(() => {
         scrollToBottomImmediate();
     }, 300);
