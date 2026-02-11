@@ -779,7 +779,7 @@ body .message.user {
     .menu {
         position: fixed;
     }
-    .menu-div a, .menu-div label, label {
+    .menu-div a, .menu-div label, label, input[type="checkbox"][sh-te] {
         cursor: context-menu !important;
     }
     body .cccx {
@@ -823,6 +823,12 @@ body .message.user {
     .share button {
         width: 100% !important;
         max-width: 100% !important;
+    }
+    .suggestion-button:hover {
+        background-color: #0000 !important;
+    }
+    .suggestion-button:active {
+        background-color: #edf2f7;
     }
 }
 
@@ -1189,3 +1195,50 @@ hr {
   -webkit-overflow-scrolling: touch;
   flex: 1 1;
 }
+
+
+
+.suggestions-container {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.suggestions-container > div:first-child {
+    font-weight: bold;
+    margin-bottom: 12px;
+    color: #1a365d;
+    text-align: right;
+    font-size: 1.1em;
+}
+
+.suggestion-button {
+    padding: 0 17px;
+    /* padding-left: 12px; */
+    height: 36px;
+    border: none;
+    font-family: sans-serif;
+    border-radius: 25px;
+    color: #4e54c8;
+    box-shadow: 0 0 0 1px #e2e8f0 inset;
+    background: #ffffff;
+}
+.closeBtn {
+    display: none;
+}
+
+.suggestion-button:hover {
+    background-color: #edf2f7;
+}
+
+.suggestion-button:active {
+    transform: translateY(0);
+}
+/* .suggestion-button::after {
+    position: relative;
+    content: '';
+    background-image: url(image/arrow-back-outline.svg);
+    background-size: cover;
+    width: 18px;
+    height: 18px;
+    margin-right: 5px;
+} */
