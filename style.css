@@ -825,7 +825,7 @@ body .message.user {
         max-width: 100% !important;
     }
     .suggestion-button:hover {
-        background-color: #0000 !important;
+        background-color: #fff !important;
     }
     .suggestion-button:active {
         background-color: #edf2f7;
