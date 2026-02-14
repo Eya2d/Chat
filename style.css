@@ -828,7 +828,7 @@ body .message.user {
         background-color: #fff !important;
     }
     .suggestion-button:active {
-        background-color: #edf2f7;
+        /* background-color: #edf2f7; */
     }
 }
 
