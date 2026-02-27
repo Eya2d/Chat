@@ -1342,7 +1342,7 @@ val div a ion-icon {
     line-height: 3.3;
     overflow: hidden;
     border-radius: 25px;
-    background-color: #686ee62a;
+    background-color: #686ee617;
     width: 426.25px;
     max-width: 100%;
 }
@@ -1354,7 +1354,7 @@ val div a ion-icon {
     left: 0;
     width: 100%;
     height: 100%;
-    box-shadow: 24px 0px 9px inset #e6e7fb;
+    box-shadow: 24px 0px 9px inset #f1f2fd;
 }
 .description-note {
     width: 100%;
@@ -1366,7 +1366,7 @@ val div a ion-icon {
     padding: 14px;
     margin: 10px 0;
     margin-bottom: 20px;
-    background-color: #686ee62a;
+    background-color: #686ee617; /*686ee62a*/
     resize: none;
 }
 .note button {
