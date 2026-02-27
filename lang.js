@@ -413,7 +413,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const overlay = document.getElementById("overlay-note");
     if (!overlay) return false;
 
-    // التحقق هل ظاهر فعلاً
     const style = window.getComputedStyle(overlay);
     return style.display !== "none" &&
            style.visibility !== "hidden" &&
@@ -427,6 +426,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function handleEvent(e) {
+    const target = e.target.closest(".coe");
 
     // إذا كان overlay-note ظاهر → احذف الكلاس وامنع التفعيل
     if (isOverlayVisible()) {
@@ -434,11 +434,13 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const target = e.target.closest(".coe");
-
-    // إذا تم الضغط على عنصر .coe
     if (target) {
       e.stopPropagation();
+
+      // إزالة الكلاس من جميع العناصر قبل إضافة الكلاس للعنصر الحالي
+      removeAllCoer();
+
+      // إضافة الكلاس للعنصر الذي تم النقر عليه
       target.classList.add("coer");
     } else {
       // الضغط خارج أي عنصر .coe
