@@ -1982,26 +1982,17 @@
                 const textarea = document.querySelector('.description-note');
                 const nameNoteDiv = document.querySelector('.name-note');
             
-                // إضافة الأنماط الأساسية للحركة
+                // إضافة الأنماط الأساسية للحركة - ضمان البدء من الأسفل
                 noteDiv.style.transition = 'transform 0.3s ease-out';
                 noteDiv.style.transform = 'translateY(100%)'; // يبدأ من الأسفل مخفياً
-            
-                // منع انتشار الأحداث من العناصر داخل .note إلى overlayNote
+                
+                // منع انتشار الأحداث داخل النوتة لمنع الإغلاق غير المقصود
                 noteDiv.addEventListener('click', (e) => {
                     e.stopPropagation(); // منع وصول الحدث إلى overlayNote
                 });
-            
-                // منع انتشار أحداث اللمس من العناصر داخل .note
+                
                 noteDiv.addEventListener('touchstart', (e) => {
-                    e.stopPropagation();
-                });
-            
-                noteDiv.addEventListener('touchmove', (e) => {
-                    e.stopPropagation();
-                });
-            
-                noteDiv.addEventListener('touchend', (e) => {
-                    e.stopPropagation();
+                    e.stopPropagation(); // منع وصول حدث اللمس إلى overlayNote
                 });
             
                 // فتح overlay عند النقر على أي flag-btn
@@ -2009,6 +2000,7 @@
                     const flagBtn = e.target.closest('.flag-btn');
                     if (flagBtn) {
                         e.preventDefault();
+                        e.stopPropagation(); // منع انتشار الحدث
                         
                         // البحث عن السؤال المرتبط بزر flag-btn
                         if (nameNoteDiv) {
@@ -2017,30 +2009,23 @@
                             
                             if (wrapper) {
                                 // البحث عن رسالة المستخدم السابقة لهذا الـ wrapper
-                                // نفترض أن رسالة المستخدم تأتي قبل رسالة البوت مباشرة
                                 const previousElement = wrapper.previousElementSibling;
                                 
                                 if (previousElement && previousElement.querySelector('.message.user')) {
-                                    // إذا كان العنصر السابق يحوي رسالة مستخدم
                                     const userMessage = previousElement.querySelector('.message.user');
                                     let questionText = userMessage.textContent.trim();
                                     
-                                    // إذا كان النص طويلاً، نأخذ أول 50 حرف فقط
                                     if (questionText.length > 50) {
                                         questionText = questionText.substring(0, 50) + '...';
                                     }
                                     
                                     nameNoteDiv.textContent = questionText;
                                 } else {
-                                    // إذا لم نجد رسالة مستخدم سابقة، نبحث في جميع رسائل المستخدم
-                                    // ونجد آخر رسالة مستخدم قبل هذا الـ wrapper
                                     const allMessages = document.querySelectorAll('.bot-message-wrapper, .message.user');
                                     let lastUserMessage = null;
                                     
                                     for (let i = 0; i < allMessages.length; i++) {
-                                        if (allMessages[i] === wrapper) {
-                                            break; // وصلنا للـ wrapper المطلوب، نتوقف
-                                        }
+                                        if (allMessages[i] === wrapper) break;
                                         if (allMessages[i].classList.contains('message') && 
                                             allMessages[i].classList.contains('user')) {
                                             lastUserMessage = allMessages[i];
@@ -2054,12 +2039,10 @@
                                         }
                                         nameNoteDiv.textContent = questionText;
                                     } else {
-                                        // إذا لم نجد أي رسالة مستخدم
                                         nameNoteDiv.textContent = 'استفسار عام';
                                     }
                                 }
                             } else {
-                                // إذا لم نجد الـ wrapper، نبحث عن أي رسالة مستخدم قريبة
                                 const userMessage = flagBtn.closest('.message.user');
                                 if (userMessage) {
                                     let questionText = userMessage.textContent.trim();
@@ -2068,12 +2051,10 @@
                                     }
                                     nameNoteDiv.textContent = questionText;
                                 } else {
-                                    // إذا لم يجد أي رسالة مستخدم
                                     nameNoteDiv.textContent = 'استفسار عام';
                                 }
                             }
                             
-                            // تغيير لون النص لتمييزه
                             nameNoteDiv.style.color = '#0f172a';
                             nameNoteDiv.style.fontWeight = '500';
                         }
@@ -2081,56 +2062,55 @@
                         // إضافة كلاس joo للـ body
                         document.body.classList.add('joo');
                         
-                        // إظهار الـ overlay وإعادة تعيين موضع النوتة
+                        // إظهار الـ overlay
                         overlayNote.style.display = 'flex';
-                        // تأخير بسيط لتفعيل الحركة بعد ظهور الـ overlay
+                        
+                        // تأكيد إعادة تعيين موضع النوتة من الأسفل قبل الظهور
+                        // هذا يضمن ظهورها من الأسفل دائماً
+                        noteDiv.style.transition = 'none'; // إيقاف الانتقال مؤقتاً
+                        noteDiv.style.transform = 'translateY(100%)'; // وضعه في الأسفل
+                        
+                        // فرض إعادة التدفق (reflow) لضمان تطبيق التغيير
+                        void noteDiv.offsetHeight;
+                        
+                        // إعادة تفعيل الانتقال وتحريكه للأعلى
+                        noteDiv.style.transition = 'transform 0.3s ease-out';
                         setTimeout(() => {
-                            noteDiv.style.transform = 'translateY(0)'; // يظهر للأعلى
-                        }, 10);
+                            noteDiv.style.transform = 'translateY(0)';
+                        }, 20); // تأخير بسيط لضمان التطبيق
                     }
                 });
             
-                // إغلاق عند النقر خارج .note فقط (وليس على عناصره الداخلية)
+                // إغلاق عند النقر خارج .note فقط
                 overlayNote.addEventListener('click', (e) => {
-                    // نتحقق أن المستخدم نقر على الـ overlay نفسه وليس على أي عنصر داخله
+                    // التأكد أن النقر كان على overlayNote نفسه وليس على أي عنصر داخله
                     if (e.target === overlayNote) {
-                        noteDiv.style.transform = 'translateY(100%)'; // يتحرك للأسفل
+                        noteDiv.style.transform = 'translateY(100%)';
                         setTimeout(() => {
                             overlayNote.style.display = 'none';
-                            // إزالة كلاس joo من الـ body
                             document.body.classList.remove('joo');
-                        }, 200); // نفس مدة الـ transition
+                        }, 200);
                     }
                 });
             
                 // زر الإرسال عبر واتساب
                 sendBtn.addEventListener('click', (e) => {
                     e.stopPropagation(); // منع انتشار الحدث
+                    
                     const question = nameNoteDiv ? nameNoteDiv.textContent : '';
                     const answer = textarea ? textarea.value : '';
                     const message = `إسم السؤال\n${question}\n\nالملاحظة\n${answer}`;
                     const encoded = encodeURIComponent(message);
-                    // الرقم السعودي مع رمز الدولة (966)
                     const whatsappUrl = `https://wa.me/966597530810?text=${encoded}`;
                     window.open(whatsappUrl, '_blank');
                     
-                    // إخفاء النوتة بحركة للأسفل ثم إخفاء الـ overlay
+                    // إخفاء النوتة
                     noteDiv.style.transform = 'translateY(100%)';
                     setTimeout(() => {
                         overlayNote.style.display = 'none';
-                        // إزالة كلاس joo من الـ body
                         document.body.classList.remove('joo');
-                        if (textarea) textarea.value = ''; // تفريغ textarea بعد الإخفاء
+                        if (textarea) textarea.value = '';
                     }, 300);
-                });
-            
-                // منع إغلاق النافذة عند النقر على textarea
-                textarea.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                });
-            
-                textarea.addEventListener('touchstart', (e) => {
-                    e.stopPropagation();
                 });
             
                 // وظيفة السحب للإخفاء على الشاشات الصغيرة (max-width: 400px)
@@ -2139,11 +2119,12 @@
                 let isDragging = false;
             
                 noteDiv.addEventListener('touchstart', (e) => {
+                    e.stopPropagation(); // منع انتشار الحدث
+                    
                     if (window.innerWidth <= 400) {
                         startY = e.touches[0].clientY;
                         isDragging = true;
-                        noteDiv.style.transition = 'none'; // نوقف الحركة أثناء السحب
-                        e.stopPropagation(); // منع انتشار الحدث
+                        noteDiv.style.transition = 'none';
                     }
                 });
             
@@ -2151,34 +2132,32 @@
                     if (!isDragging || window.innerWidth > 400) return;
                     e.preventDefault();
                     e.stopPropagation(); // منع انتشار الحدث
+                    
                     currentY = e.touches[0].clientY;
                     const deltaY = currentY - startY;
-                    if (deltaY > 0) { // السحب للأسفل فقط
+                    if (deltaY > 0) {
                         noteDiv.style.transform = `translateY(${deltaY}px)`;
                     }
                 });
             
                 noteDiv.addEventListener('touchend', (e) => {
-                    if (!isDragging || window.innerWidth > 400) return;
                     e.stopPropagation(); // منع انتشار الحدث
+                    
+                    if (!isDragging || window.innerWidth > 400) return;
                     isDragging = false;
                     const deltaY = currentY - startY;
                     const noteHeight = noteDiv.offsetHeight;
                     
-                    // إعادة تفعيل الـ transition
                     noteDiv.style.transition = 'transform 0.3s ease-out';
                     
-                    // إذا تم السحب لأكثر من 40% من الارتفاع، نخفي النوتة
                     if (deltaY > noteHeight * 0.4) {
                         noteDiv.style.transform = 'translateY(100%)';
                         setTimeout(() => {
                             overlayNote.style.display = 'none';
-                            // إزالة كلاس joo من الـ body
                             document.body.classList.remove('joo');
-                            noteDiv.style.transform = 'translateY(0)'; // إعادة تعيين للظهور مرة أخرى
+                            noteDiv.style.transform = 'translateY(0)'; // إعادة تعيين
                         }, 300);
                     } else {
-                        // إعادة النوتة لمكانها
                         noteDiv.style.transform = 'translateY(0)';
                     }
                 });
