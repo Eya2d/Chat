@@ -1983,26 +1983,23 @@
                 const textarea = overlayNote.querySelector('.description-note');
                 const nameNoteDiv = overlayNote.querySelector('.name-note');
             
-                // الحركة الأساسية
                 noteDiv.style.transition = 'transform 0.3s ease-out';
                 noteDiv.style.transform = 'translateY(100%)';
             
-                // =========================
-                // متغيرات التحكم بالسحب
-                // =========================
                 let startY = 0;
                 let currentY = 0;
                 let isDragging = false;
                 let justDragged = false;
             
-                // =========================
                 // فتح الـ overlay
-                // =========================
                 document.addEventListener('click', (e) => {
                     const flagBtn = e.target.closest('.flag-btn');
                     if (!flagBtn) return;
                 
                     e.preventDefault();
+                
+                    // إعادة تهيئة حالة السحب والإغلاق
+                    justDragged = false;
                 
                     // استخراج نص السؤال
                     if (nameNoteDiv) {
@@ -2014,11 +2011,7 @@
                             if (previousElement && previousElement.querySelector('.message.user')) {
                                 const userMessage = previousElement.querySelector('.message.user');
                                 let questionText = userMessage.textContent.trim();
-                            
-                                if (questionText.length > 50) {
-                                    questionText = questionText.substring(0, 50) + '...';
-                                }
-                            
+                                if (questionText.length > 50) questionText = questionText.substring(0, 50) + '...';
                                 nameNoteDiv.textContent = questionText;
                             } else {
                                 const allMessages = document.querySelectorAll('.bot-message-wrapper, .message.user');
@@ -2026,36 +2019,23 @@
                             
                                 for (let i = 0; i < allMessages.length; i++) {
                                     if (allMessages[i] === wrapper) break;
-                                
-                                    if (
-                                        allMessages[i].classList.contains('message') &&
-                                        allMessages[i].classList.contains('user')
-                                    ) {
-                                        lastUserMessage = allMessages[i];
-                                    }
+                                    if (allMessages[i].classList.contains('message') &&
+                                        allMessages[i].classList.contains('user')) lastUserMessage = allMessages[i];
                                 }
                             
                                 if (lastUserMessage) {
                                     let questionText = lastUserMessage.textContent.trim();
-                                    if (questionText.length > 50) {
-                                        questionText = questionText.substring(0, 50) + '...';
-                                    }
+                                    if (questionText.length > 50) questionText = questionText.substring(0, 50) + '...';
                                     nameNoteDiv.textContent = questionText;
-                                } else {
-                                    nameNoteDiv.textContent = 'استفسار عام';
-                                }
+                                } else nameNoteDiv.textContent = 'استفسار عام';
                             }
                         } else {
                             const userMessage = flagBtn.closest('.message.user');
                             if (userMessage) {
                                 let questionText = userMessage.textContent.trim();
-                                if (questionText.length > 50) {
-                                    questionText = questionText.substring(0, 50) + '...';
-                                }
+                                if (questionText.length > 50) questionText = questionText.substring(0, 50) + '...';
                                 nameNoteDiv.textContent = questionText;
-                            } else {
-                                nameNoteDiv.textContent = 'استفسار عام';
-                            }
+                            } else nameNoteDiv.textContent = 'استفسار عام';
                         }
                     
                         nameNoteDiv.style.color = '#0f172a';
@@ -2064,10 +2044,9 @@
                 
                     document.body.classList.add('joo');
                 
-                    // ضمان الظهور من الأسفل دائماً
+                    // ظهور من الأسفل دائماً
                     noteDiv.style.transition = 'none';
                     noteDiv.style.transform = 'translateY(100%)';
-                
                     overlayNote.style.display = 'flex';
                 
                     requestAnimationFrame(() => {
@@ -2076,25 +2055,13 @@
                     });
                 });
             
-                // =========================
                 // منع الإغلاق عند النقر داخل note
-                // =========================
                 overlayNote.addEventListener('click', (e) => {
+                    if (justDragged) { justDragged = false; return; }
                 
-                    // منع الإغلاق بعد السحب مباشرة
-                    if (justDragged) {
-                        justDragged = false;
-                        return;
-                    }
-                
-                    // لا تغلق إذا كان النقر داخل note أو عناصره
-                    if (
-                        e.target.closest('.note') ||
+                    if (e.target.closest('.note') ||
                         e.target.closest('span') ||
-                        e.target.closest('.name-note')
-                    ) {
-                        return;
-                    }
+                        e.target.closest('.name-note')) return;
                 
                     noteDiv.style.transform = 'translateY(100%)';
                     setTimeout(() => {
@@ -2103,9 +2070,7 @@
                     }, 300);
                 });
             
-                // =========================
-                // زر الإرسال (واتساب)
-                // =========================
+                // زر الإرسال
                 sendBtn.addEventListener('click', () => {
                     const question = nameNoteDiv ? nameNoteDiv.textContent : '';
                     const answer = textarea ? textarea.value : '';
@@ -2122,9 +2087,7 @@
                     }, 300);
                 });
             
-                // =========================
-                // السحب للإغلاق (الموبايل)
-                // =========================
+                // السحب للإغلاق
                 noteDiv.addEventListener('touchstart', (e) => {
                     if (window.innerWidth <= 400) {
                         startY = e.touches[0].clientY;
@@ -2137,19 +2100,14 @@
             
                 noteDiv.addEventListener('touchmove', (e) => {
                     if (!isDragging || window.innerWidth > 400) return;
-                
                     e.preventDefault();
                     currentY = e.touches[0].clientY;
                     const deltaY = currentY - startY;
-                
-                    if (deltaY > 0) {
-                        noteDiv.style.transform = `translateY(${deltaY}px)`;
-                    }
+                    if (deltaY > 0) noteDiv.style.transform = `translateY(${deltaY}px)`;
                 });
             
                 noteDiv.addEventListener('touchend', () => {
                     if (!isDragging || window.innerWidth > 400) return;
-                
                     isDragging = false;
                     const deltaY = currentY - startY;
                     const noteHeight = noteDiv.offsetHeight;
@@ -2158,19 +2116,14 @@
                 
                     if (deltaY > noteHeight * 0.4) {
                         justDragged = true;
-                    
                         noteDiv.style.transform = 'translateY(100%)';
                         setTimeout(() => {
                             overlayNote.style.display = 'none';
                             document.body.classList.remove('joo');
-                        
-                            // إعادة ضبطه ليظهر من الأسفل في المرة القادمة
                             noteDiv.style.transition = 'none';
                             noteDiv.style.transform = 'translateY(100%)';
                         }, 300);
-                    } else {
-                        noteDiv.style.transform = 'translateY(0)';
-                    }
+                    } else noteDiv.style.transform = 'translateY(0)';
                 });
             }
 
