@@ -402,3 +402,32 @@ document.addEventListener("contextmenu", function (e) {
 
 
 
+
+
+
+
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  function handleEvent(e) {
+    const target = e.target.closest(".coe");
+
+    // إذا تم الضغط على عنصر .coe
+    if (target) {
+      e.stopPropagation();
+      target.classList.add("coer");
+    } else {
+      // الضغط خارج أي عنصر .coe
+      document.querySelectorAll(".coe").forEach(el => {
+        el.classList.remove("coer");
+      });
+    }
+  }
+
+  // دعم الماوس
+  document.addEventListener("mousedown", handleEvent);
+
+  // دعم اللمس
+  document.addEventListener("touchstart", handleEvent, { passive: true });
+
+});
