@@ -409,7 +409,31 @@ document.addEventListener("contextmenu", function (e) {
 
 document.addEventListener("DOMContentLoaded", () => {
 
+  function isOverlayVisible() {
+    const overlay = document.getElementById("overlay-note");
+    if (!overlay) return false;
+
+    // التحقق هل ظاهر فعلاً
+    const style = window.getComputedStyle(overlay);
+    return style.display !== "none" &&
+           style.visibility !== "hidden" &&
+           style.opacity !== "0";
+  }
+
+  function removeAllCoer() {
+    document.querySelectorAll(".coe").forEach(el => {
+      el.classList.remove("coer");
+    });
+  }
+
   function handleEvent(e) {
+
+    // إذا كان overlay-note ظاهر → احذف الكلاس وامنع التفعيل
+    if (isOverlayVisible()) {
+      removeAllCoer();
+      return;
+    }
+
     const target = e.target.closest(".coe");
 
     // إذا تم الضغط على عنصر .coe
@@ -418,9 +442,7 @@ document.addEventListener("DOMContentLoaded", () => {
       target.classList.add("coer");
     } else {
       // الضغط خارج أي عنصر .coe
-      document.querySelectorAll(".coe").forEach(el => {
-        el.classList.remove("coer");
-      });
+      removeAllCoer();
     }
   }
 
@@ -429,5 +451,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // دعم اللمس
   document.addEventListener("touchstart", handleEvent, { passive: true });
+
+  // مراقبة ظهور overlay-note وإزالة الكلاس فور ظهوره
+  const observer = new MutationObserver(() => {
+    if (isOverlayVisible()) {
+      removeAllCoer();
+    }
+  });
+
+  const overlay = document.getElementById("overlay-note");
+  if (overlay) {
+    observer.observe(overlay, {
+      attributes: true,
+      attributeFilter: ["style", "class"]
+    });
+  }
 
 });
