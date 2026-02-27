@@ -2060,6 +2060,9 @@
                             nameNoteDiv.style.fontWeight = '500';
                         }
                         
+                        // إضافة كلاس joo للـ body
+                        document.body.classList.add('joo');
+                        
                         // إظهار الـ overlay وإعادة تعيين موضع النوتة
                         overlayNote.style.display = 'flex';
                         // تأخير بسيط لتفعيل الحركة بعد ظهور الـ overlay
@@ -2075,6 +2078,8 @@
                         noteDiv.style.transform = 'translateY(100%)'; // يتحرك للأسفل
                         setTimeout(() => {
                             overlayNote.style.display = 'none';
+                            // إزالة كلاس joo من الـ body
+                            document.body.classList.remove('joo');
                         }, 200); // نفس مدة الـ transition
                     }
                 });
@@ -2093,6 +2098,8 @@
                     noteDiv.style.transform = 'translateY(100%)';
                     setTimeout(() => {
                         overlayNote.style.display = 'none';
+                        // إزالة كلاس joo من الـ body
+                        document.body.classList.remove('joo');
                         if (textarea) textarea.value = ''; // تفريغ textarea بعد الإخفاء
                     }, 300);
                 });
@@ -2134,6 +2141,8 @@
                         noteDiv.style.transform = 'translateY(100%)';
                         setTimeout(() => {
                             overlayNote.style.display = 'none';
+                            // إزالة كلاس joo من الـ body
+                            document.body.classList.remove('joo');
                             noteDiv.style.transform = 'translateY(0)'; // إعادة تعيين للظهور مرة أخرى
                         }, 300);
                     } else {
