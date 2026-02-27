@@ -1307,6 +1307,7 @@ val div a ion-icon {
 }
 
 .overlay-note {
+    user-select: none;
     position: fixed;
     z-index: 11150;
     left: 0;
@@ -1369,6 +1370,8 @@ val div a ion-icon {
     resize: none;
 }
 .note button {
+    opacity: .7;
+    transition: ease 0.3s;
     fill: #767ce8;
     color: #ffffff;
     background: #8170ff;
