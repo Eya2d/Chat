@@ -1971,7 +1971,7 @@
                             <span>نقدر ملاحظتك. يرجى مشاركة أي تعليقات أو اقتراحات لديك لمساعدتنا على التحسين.</span>
                             <div class="name-note">إسم السؤال</div>
                             <textarea class="description-note">الإجابة</textarea>
-                            <div><button class="Wave-cloud send-note">إرسال الملاحظة</button></div>
+                            <div><button class="Wave-cloud send-note" disabled style="opacity:0.7;">إرسال الملاحظة</button></div>
                         </div>
                     `;
                     document.body.appendChild(div);
@@ -1983,6 +1983,18 @@
                 const textarea = overlayNote.querySelector('.description-note');
                 const nameNoteDiv = overlayNote.querySelector('.name-note');
             
+                // تفعيل زر الإرسال عند كتابة أكثر من 10 أحرف
+                textarea.addEventListener('input', () => {
+                    if (textarea.value.trim().length > 10) {
+                        sendBtn.disabled = false;
+                        sendBtn.style.opacity = '1';
+                    } else {
+                        sendBtn.disabled = true;
+                        sendBtn.style.opacity = '0.7';
+                    }
+                });
+            
+                // بقية الكود كما هو: فتح overlay، الإغلاق، السحب، الإرسال...
                 noteDiv.style.transition = 'transform 0.3s ease-out';
                 noteDiv.style.transform = 'translateY(100%)';
             
@@ -1991,23 +2003,17 @@
                 let isDragging = false;
                 let justDragged = false;
             
-                // فتح الـ overlay
                 document.addEventListener('click', (e) => {
                     const flagBtn = e.target.closest('.flag-btn');
                     if (!flagBtn) return;
                 
                     e.preventDefault();
-                
-                    // إعادة تهيئة حالة السحب والإغلاق
                     justDragged = false;
                 
-                    // استخراج نص السؤال
                     if (nameNoteDiv) {
                         const wrapper = flagBtn.closest('.bot-message-wrapper');
-                    
                         if (wrapper) {
                             const previousElement = wrapper.previousElementSibling;
-                        
                             if (previousElement && previousElement.querySelector('.message.user')) {
                                 const userMessage = previousElement.querySelector('.message.user');
                                 let questionText = userMessage.textContent.trim();
@@ -2016,13 +2022,11 @@
                             } else {
                                 const allMessages = document.querySelectorAll('.bot-message-wrapper, .message.user');
                                 let lastUserMessage = null;
-                            
                                 for (let i = 0; i < allMessages.length; i++) {
                                     if (allMessages[i] === wrapper) break;
                                     if (allMessages[i].classList.contains('message') &&
                                         allMessages[i].classList.contains('user')) lastUserMessage = allMessages[i];
                                 }
-                            
                                 if (lastUserMessage) {
                                     let questionText = lastUserMessage.textContent.trim();
                                     if (questionText.length > 50) questionText = questionText.substring(0, 50) + '...';
@@ -2037,14 +2041,11 @@
                                 nameNoteDiv.textContent = questionText;
                             } else nameNoteDiv.textContent = 'استفسار عام';
                         }
-                    
                         nameNoteDiv.style.color = '#0f172a';
                         nameNoteDiv.style.fontWeight = '500';
                     }
                 
                     document.body.classList.add('joo');
-                
-                    // ظهور من الأسفل دائماً
                     noteDiv.style.transition = 'none';
                     noteDiv.style.transform = 'translateY(100%)';
                     overlayNote.style.display = 'flex';
@@ -2055,10 +2056,8 @@
                     });
                 });
             
-                // منع الإغلاق عند النقر داخل note
                 overlayNote.addEventListener('click', (e) => {
                     if (justDragged) { justDragged = false; return; }
-                
                     if (e.target.closest('.note') ||
                         e.target.closest('span') ||
                         e.target.closest('.name-note')) return;
@@ -2070,8 +2069,9 @@
                     }, 300);
                 });
             
-                // زر الإرسال
                 sendBtn.addEventListener('click', () => {
+                    if (sendBtn.disabled) return;
+                
                     const question = nameNoteDiv ? nameNoteDiv.textContent : '';
                     const answer = textarea ? textarea.value : '';
                     const message = `إسم السؤال\n${question}\n\nالملاحظة\n${answer}`;
@@ -2084,10 +2084,12 @@
                         overlayNote.style.display = 'none';
                         document.body.classList.remove('joo');
                         if (textarea) textarea.value = '';
+                        sendBtn.disabled = true;
+                        sendBtn.style.opacity = '0.7';
                     }, 300);
                 });
             
-                // السحب للإغلاق
+                // السحب والإغلاق
                 noteDiv.addEventListener('touchstart', (e) => {
                     if (window.innerWidth <= 400) {
                         startY = e.touches[0].clientY;
@@ -2111,7 +2113,6 @@
                     isDragging = false;
                     const deltaY = currentY - startY;
                     const noteHeight = noteDiv.offsetHeight;
-                
                     noteDiv.style.transition = 'transform 0.3s ease-out';
                 
                     if (deltaY > noteHeight * 0.4) {
