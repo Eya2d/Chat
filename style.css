@@ -839,6 +839,9 @@ body .message.user {
     .note {
         border-radius: 25px 25px 0px 0px !important;
     }
+    .overlay-note {
+        background: #37384717;
+    }
 }
 
 
@@ -1353,14 +1356,14 @@ val div a ion-icon {
 }
 .description-note {
     width: 100%;
-    height: 80px;
+    height: 100px;
     border: none;
     border-radius: 25px;
     font-family: 'Cairo', sans-serif;
     font-size: 14px;
     padding: 14px;
     margin: 10px 0;
-    margin-bottom: 26px;
+    margin-bottom: 20px;
     background-color: #686ee62a;
     resize: none;
 }
