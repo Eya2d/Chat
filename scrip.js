@@ -50,7 +50,7 @@ document.addEventListener("touchstart", (e) => {
 
     startX = e.touches[0].clientX;
 
-    if (startX < 30 && !sidebar.classList.contains("show")) {
+    if (startX < 20 && !sidebar.classList.contains("show")) {
         isDragging = true;
     }
 });
