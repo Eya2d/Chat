@@ -1958,7 +1958,7 @@
             // ======== تفعيل التمرير التلقائي عند ظهور ديف الاقتراحات ========
             scrollToMessagesWhenSuggestionsAppear();
 
-            // ========== بداية الكود المضاف (نظام الملاحظات) ==========
+            // ========== بداية الكود المضاف (نظام الملاحظات) للرسائل المحفوظة ==========
             function initNoteOverlay() {
                 const overlayNote = document.getElementById('overlay-note');
                 if (!overlayNote) {
@@ -1977,8 +1977,9 @@
                     document.body.appendChild(div);
                 }
             
+                const overlayNoteElement = document.getElementById('overlay-note');
                 const noteDiv = document.querySelector('.note');
-                const sendBtn = document.querySelector('.send-note'); // زر الإرسال داخل .note
+                const sendBtn = document.querySelector('.send-note');
                 const textarea = document.querySelector('.description-note');
                 const nameNoteDiv = document.querySelector('.name-note');
             
@@ -1986,11 +1987,31 @@
                 noteDiv.style.transition = 'transform 0.3s ease-out';
                 noteDiv.style.transform = 'translateY(100%)'; // يبدأ من الأسفل مخفياً
             
+                // منع إغلاق النافذة عند النقر على أي عنصر داخل .note
+                noteDiv.addEventListener('click', (e) => {
+                    e.stopPropagation(); // هذا يمنع وصول الحدث إلى overlayNote
+                });
+            
+                // منع إغلاق النافذة عند النقر على textarea نفسها
+                if (textarea) {
+                    textarea.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                    });
+                }
+            
+                // منع إغلاق النافذة عند النقر على زر الإرسال
+                if (sendBtn) {
+                    sendBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                    });
+                }
+            
                 // فتح overlay عند النقر على أي flag-btn
                 document.addEventListener('click', (e) => {
                     const flagBtn = e.target.closest('.flag-btn');
                     if (flagBtn) {
                         e.preventDefault();
+                        e.stopPropagation(); // منع انتشار الحدث
                         
                         // البحث عن السؤال المرتبط بزر flag-btn
                         if (nameNoteDiv) {
@@ -1999,29 +2020,24 @@
                             
                             if (wrapper) {
                                 // البحث عن رسالة المستخدم السابقة لهذا الـ wrapper
-                                // نفترض أن رسالة المستخدم تأتي قبل رسالة البوت مباشرة
                                 const previousElement = wrapper.previousElementSibling;
                                 
                                 if (previousElement && previousElement.querySelector('.message.user')) {
-                                    // إذا كان العنصر السابق يحوي رسالة مستخدم
                                     const userMessage = previousElement.querySelector('.message.user');
                                     let questionText = userMessage.textContent.trim();
                                     
-                                    // إذا كان النص طويلاً، نأخذ أول 50 حرف فقط
                                     if (questionText.length > 50) {
                                         questionText = questionText.substring(0, 50) + '...';
                                     }
                                     
                                     nameNoteDiv.textContent = questionText;
                                 } else {
-                                    // إذا لم نجد رسالة مستخدم سابقة، نبحث في جميع رسائل المستخدم
-                                    // ونجد آخر رسالة مستخدم قبل هذا الـ wrapper
                                     const allMessages = document.querySelectorAll('.bot-message-wrapper, .message.user');
                                     let lastUserMessage = null;
                                     
                                     for (let i = 0; i < allMessages.length; i++) {
                                         if (allMessages[i] === wrapper) {
-                                            break; // وصلنا للـ wrapper المطلوب، نتوقف
+                                            break;
                                         }
                                         if (allMessages[i].classList.contains('message') && 
                                             allMessages[i].classList.contains('user')) {
@@ -2036,12 +2052,10 @@
                                         }
                                         nameNoteDiv.textContent = questionText;
                                     } else {
-                                        // إذا لم نجد أي رسالة مستخدم
                                         nameNoteDiv.textContent = 'استفسار عام';
                                     }
                                 }
                             } else {
-                                // إذا لم نجد الـ wrapper، نبحث عن أي رسالة مستخدم قريبة
                                 const userMessage = flagBtn.closest('.message.user');
                                 if (userMessage) {
                                     let questionText = userMessage.textContent.trim();
@@ -2050,61 +2064,56 @@
                                     }
                                     nameNoteDiv.textContent = questionText;
                                 } else {
-                                    // إذا لم يجد أي رسالة مستخدم
                                     nameNoteDiv.textContent = 'استفسار عام';
                                 }
                             }
                             
-                            // تغيير لون النص لتمييزه
                             nameNoteDiv.style.color = '#0f172a';
                             nameNoteDiv.style.fontWeight = '500';
                         }
                         
-                        // إضافة كلاس joo للـ body
                         document.body.classList.add('joo');
                         
-                        // إظهار الـ overlay وإعادة تعيين موضع النوتة
-                        overlayNote.style.display = 'flex';
-                        // تأخير بسيط لتفعيل الحركة بعد ظهور الـ overlay
+                        overlayNoteElement.style.display = 'flex';
                         setTimeout(() => {
-                            noteDiv.style.transform = 'translateY(0)'; // يظهر للأعلى
+                            noteDiv.style.transform = 'translateY(0)';
                         }, 10);
                     }
                 });
             
-                // إغلاق عند النقر خارج .note
-                overlayNote.addEventListener('click', (e) => {
-                    if (!noteDiv.contains(e.target)) {
-                        noteDiv.style.transform = 'translateY(100%)'; // يتحرك للأسفل
+                // إغلاق فقط عند النقر المباشر على الخلفية (وليس على .note أو محتوياته)
+                overlayNoteElement.addEventListener('click', (e) => {
+                    // نتحقق أن المستخدم نقر مباشرة على overlayNote وليس على أي عنصر داخله
+                    if (e.target === overlayNoteElement) {
+                        noteDiv.style.transform = 'translateY(100%)';
                         setTimeout(() => {
-                            overlayNote.style.display = 'none';
-                            // إزالة كلاس joo من الـ body
+                            overlayNoteElement.style.display = 'none';
                             document.body.classList.remove('joo');
-                        }, 200); // نفس مدة الـ transition
+                        }, 200);
                     }
                 });
             
                 // زر الإرسال عبر واتساب
-                sendBtn.addEventListener('click', () => {
+                sendBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // منع انتشار الحدث
+                    
                     const question = nameNoteDiv ? nameNoteDiv.textContent : '';
                     const answer = textarea ? textarea.value : '';
                     const message = `إسم السؤال\n${question}\n\nالملاحظة\n${answer}`;
                     const encoded = encodeURIComponent(message);
-                    // الرقم السعودي مع رمز الدولة (966)
                     const whatsappUrl = `https://wa.me/966597530810?text=${encoded}`;
                     window.open(whatsappUrl, '_blank');
                     
-                    // إخفاء النوتة بحركة للأسفل ثم إخفاء الـ overlay
+                    // إخفاء النوتة بعد الإرسال
                     noteDiv.style.transform = 'translateY(100%)';
                     setTimeout(() => {
-                        overlayNote.style.display = 'none';
-                        // إزالة كلاس joo من الـ body
+                        overlayNoteElement.style.display = 'none';
                         document.body.classList.remove('joo');
-                        if (textarea) textarea.value = ''; // تفريغ textarea بعد الإخفاء
+                        if (textarea) textarea.value = '';
                     }, 300);
                 });
             
-                // وظيفة السحب للإخفاء على الشاشات الصغيرة (max-width: 400px)
+                // وظيفة السحب للإخفاء على الشاشات الصغيرة
                 let startY = 0;
                 let currentY = 0;
                 let isDragging = false;
@@ -2113,46 +2122,95 @@
                     if (window.innerWidth <= 400) {
                         startY = e.touches[0].clientY;
                         isDragging = true;
-                        noteDiv.style.transition = 'none'; // نوقف الحركة أثناء السحب
+                        noteDiv.style.transition = 'none';
+                        e.stopPropagation(); // منع انتشار الحدث
                     }
                 });
             
                 noteDiv.addEventListener('touchmove', (e) => {
                     if (!isDragging || window.innerWidth > 400) return;
                     e.preventDefault();
+                    e.stopPropagation(); // منع انتشار الحدث
                     currentY = e.touches[0].clientY;
                     const deltaY = currentY - startY;
-                    if (deltaY > 0) { // السحب للأسفل فقط
+                    if (deltaY > 0) {
                         noteDiv.style.transform = `translateY(${deltaY}px)`;
                     }
                 });
             
                 noteDiv.addEventListener('touchend', (e) => {
                     if (!isDragging || window.innerWidth > 400) return;
+                    e.stopPropagation(); // منع انتشار الحدث
                     isDragging = false;
                     const deltaY = currentY - startY;
                     const noteHeight = noteDiv.offsetHeight;
                     
-                    // إعادة تفعيل الـ transition
                     noteDiv.style.transition = 'transform 0.3s ease-out';
                     
-                    // إذا تم السحب لأكثر من 40% من الارتفاع، نخفي النوتة
                     if (deltaY > noteHeight * 0.4) {
                         noteDiv.style.transform = 'translateY(100%)';
                         setTimeout(() => {
-                            overlayNote.style.display = 'none';
-                            // إزالة كلاس joo من الـ body
+                            overlayNoteElement.style.display = 'none';
                             document.body.classList.remove('joo');
-                            noteDiv.style.transform = 'translateY(0)'; // إعادة تعيين للظهور مرة أخرى
+                            noteDiv.style.transform = 'translateY(0)';
                         }, 300);
                     } else {
-                        // إعادة النوتة لمكانها
                         noteDiv.style.transform = 'translateY(0)';
                     }
                 });
             }
 
+            // تأكد من إضافة <val class="coe">...</val> للرسائل المحفوظة
+            function addNoteOverlayToSavedMessages() {
+                // البحث عن جميع رسائل البوت المحفوظة التي لا تحتوي على val.coe
+                document.querySelectorAll('.bot-message-wrapper').forEach(wrapper => {
+                    const chatDiv = wrapper.querySelector('.chat-div');
+                    const existingCoe = wrapper.querySelector('val.coe');
+                    
+                    // إذا كان هناك chat-div ولا يوجد val.coe فيها
+                    if (chatDiv && !existingCoe) {
+                        // إنشاء عنصر val.coe الجديد
+                        const coeElement = document.createElement('val');
+                        coeElement.className = 'coe';
+                        coeElement.innerHTML = `
+                            <ion-icon name="ellipsis-horizontal"></ion-icon>
+                            <div>
+                                <a class="flag-btn"><ion-icon name="flag-outline"></ion-icon> إرسال ملاحظة</a>
+                            </div>
+                        `;
+                        
+                        // إدراج coeElement في بداية chatDiv
+                        if (chatDiv.firstChild) {
+                            chatDiv.insertBefore(coeElement, chatDiv.firstChild);
+                        } else {
+                            chatDiv.appendChild(coeElement);
+                        }
+                        
+                        // حفظ التغييرات
+                        saveMessages();
+                    }
+                });
+            }
+
             initNoteOverlay();
+            
+            // تنفيذ إضافة val.coe للرسائل المحفوظة بعد تحميل الصفحة
+            setTimeout(() => {
+                addNoteOverlayToSavedMessages();
+            }, 500);
+            
+            // إعادة تنفيذها عند تحميل رسائل جديدة
+            const originalAddBotMessageWithTyping = addBotMessageWithTyping;
+            addBotMessageWithTyping = function(text, isNew = true, isFirstChunk = false, onComplete = null, hasMoreParts = false, showSuggestions = false) {
+                const result = originalAddBotMessageWithTyping.call(this, text, isNew, isFirstChunk, () => {
+                    // بعد إضافة الرسالة، تأكد من وجود val.coe
+                    setTimeout(() => {
+                        addNoteOverlayToSavedMessages();
+                    }, 100);
+                    if (onComplete) onComplete();
+                }, hasMoreParts, showSuggestions);
+                return result;
+            };
             // ========== نهاية الكود المضاف ==========
 
             // تحميل عند البداية
