@@ -2025,7 +2025,10 @@ window.onload = () => {
                     <span>نقدر ملاحظتك. يرجى مشاركة أي تعليقات أو اقتراحات لديك لمساعدتنا على التحسين.</span>
                     <div class="name-note">إسم السؤال</div>
                     <textarea class="description-note">الإجابة</textarea>
-                    <div><button class="Wave-cloud send-note" disabled style="opacity:0.7;">إرسال الملاحظة</button></div>
+                    <div>
+                        <button class="Wave-cloud send-note" disabled style="opacity:0.7;">إرسال الملاحظة</button>
+                        <button class="Wave-cloud join-group">انضم للجروب أولاً</button>
+                    </div>
                 </div>
             `;
             document.body.appendChild(div);
@@ -2034,12 +2037,15 @@ window.onload = () => {
     
         const noteDiv = overlayNote.querySelector('.note');
         const sendBtn = overlayNote.querySelector('.send-note');
+        const joinBtn = overlayNote.querySelector('.join-group');
         const textarea = overlayNote.querySelector('.description-note');
         const nameNoteDiv = overlayNote.querySelector('.name-note');
     
-        // تفعيل زر الإرسال عند كتابة أكثر من 10 أحرف
+        const groupLink = 'https://chat.whatsapp.com/H3tmm0lg9V4HPf7rrm6JQc';
+    
+        // تفعيل زر الإرسال عند كتابة أكثر من 5 أحرف
         textarea.addEventListener('input', () => {
-            if (textarea.value.trim().length > 10) {
+            if (textarea.value.trim().length > 5) {
                 sendBtn.disabled = false;
                 sendBtn.style.opacity = '1';
             } else {
@@ -2048,14 +2054,39 @@ window.onload = () => {
             }
         });
     
-        // بقية الكود كما هو: فتح overlay، الإغلاق، السحب، الإرسال...
+        // حدث زر الانضمام للجروب
+        joinBtn.addEventListener('click', () => {
+            window.open(groupLink, '_blank'); // فتح رابط الانضمام مباشرة
+        });
+    
+        // حدث زر الإرسال
+        sendBtn.addEventListener('click', () => {
+            if (sendBtn.disabled) return;
+        
+            const question = nameNoteDiv ? nameNoteDiv.textContent : '';
+            const answer = textarea ? textarea.value : '';
+            const message = `إسم السؤال\n${question}\n\nالملاحظة\n${answer}`;
+            const encoded = encodeURIComponent(message);
+        
+            // مشاركة الرسالة عبر WhatsApp (يمكن اختيار الجروب)
+            const whatsappUrl = `https://api.whatsapp.com/send?text=${encoded}`;
+            window.open(whatsappUrl, '_blank');
+        
+            // إخفاء overlay بعد الإرسال
+            noteDiv.style.transform = 'translateY(100%)';
+            setTimeout(() => {
+                overlayNote.style.display = 'none';
+                document.body.classList.remove('joo');
+                if (textarea) textarea.value = '';
+                sendBtn.disabled = true;
+                sendBtn.style.opacity = '0.7';
+            }, 300);
+        });
+    
+        // بقية كود فتح/إغلاق overlay والسحب كما هو
         noteDiv.style.transition = 'transform 0.3s ease-out';
         noteDiv.style.transform = 'translateY(100%)';
-    
-        let startY = 0;
-        let currentY = 0;
-        let isDragging = false;
-        let justDragged = false;
+        let startY = 0, currentY = 0, isDragging = false, justDragged = false;
     
         document.addEventListener('click', (e) => {
             const flagBtn = e.target.closest('.flag-btn');
@@ -2064,6 +2095,7 @@ window.onload = () => {
             e.preventDefault();
             justDragged = false;
         
+            // تحديث اسم السؤال
             if (nameNoteDiv) {
                 const wrapper = flagBtn.closest('.bot-message-wrapper');
                 if (wrapper) {
@@ -2112,9 +2144,7 @@ window.onload = () => {
     
         overlayNote.addEventListener('click', (e) => {
             if (justDragged) { justDragged = false; return; }
-            if (e.target.closest('.note') ||
-                e.target.closest('span') ||
-                e.target.closest('.name-note')) return;
+            if (e.target.closest('.note') || e.target.closest('span') || e.target.closest('.name-note')) return;
         
             noteDiv.style.transform = 'translateY(100%)';
             setTimeout(() => {
@@ -2123,27 +2153,6 @@ window.onload = () => {
             }, 300);
         });
     
-        sendBtn.addEventListener('click', () => {
-            if (sendBtn.disabled) return;
-        
-            const question = nameNoteDiv ? nameNoteDiv.textContent : '';
-            const answer = textarea ? textarea.value : '';
-            const message = `إسم السؤال\n${question}\n\nالملاحظة\n${answer}`;
-            const encoded = encodeURIComponent(message);
-            const whatsappUrl = `https://wa.me/966597530810?text=${encoded}`;
-            window.open(whatsappUrl, '_blank');
-        
-            noteDiv.style.transform = 'translateY(100%)';
-            setTimeout(() => {
-                overlayNote.style.display = 'none';
-                document.body.classList.remove('joo');
-                if (textarea) textarea.value = '';
-                sendBtn.disabled = true;
-                sendBtn.style.opacity = '0.7';
-            }, 300);
-        });
-    
-        // السحب والإغلاق
         noteDiv.addEventListener('touchstart', (e) => {
             if (window.innerWidth <= 400) {
                 startY = e.touches[0].clientY;
