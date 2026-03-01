@@ -841,15 +841,7 @@ body .message.user {
         border-radius: 25px 25px 0px 0px !important;
     }
     .ccd {
-        display: block !important;
-        opacity: 0;
-    }
-    .note .ccd:active {
-        opacity: 1;
-        background-color: #8a7bff26;
-    }
-    .ccd:hover {
-        background-color: #8a7bff26;
+        display: flex !important;
     }
     .overlay-note {
         background: #37384717;
@@ -1351,13 +1343,18 @@ val div a ion-icon {
     display: none;
     position: absolute;
     z-index: 5;
-    top: 0;
+    justify-content: center;
+    top: -24px;
     left: 0;
     right: 0;
-    height: 40px;
+    height: 24px;
     border-radius: 25px;
-    margin: 5px;
-    backdrop-filter: blur(5px);
+}
+.ccd a {
+    display: block;
+    padding: 3px 18.5px;
+    border-radius: 5px;
+    background: #8676ff;
 }
 .note span {
     font-size: 13px;
@@ -1390,9 +1387,11 @@ val div a ion-icon {
     box-shadow: 24px 0px 9px inset #f1f2fd;
 }
 .description-note {
+    transition: ease 0.2s;
     width: 100%;
     height: 150px;
     border: none;
+    outline: none;
     border-radius: 25px;
     font-family: 'Cairo', sans-serif;
     font-size: 14px;
@@ -1401,6 +1400,9 @@ val div a ion-icon {
     margin-bottom: 20px;
     background-color: #686ee617; /*686ee62a*/
     resize: none;
+}
+.description-note:focus {
+    box-shadow: 0 0 0 2px #767ce8 inset;
 }
 .note button {
     transition: ease 0.3s;
@@ -1419,12 +1421,16 @@ val div a ion-icon {
 }
 
 .send {
-    font-size: 14px;
+    font-size: 13px;
     color: #8e8e8e;
 }
 .send a {
     overflow: hidden;
     display: inline-flex;
-    color: #5d63dc;
+    color: #767ce8;
     font-weight: 700;
+    border-radius: 25px;
+}
+.send a:hover {
+    color: #666bc7;
 }
