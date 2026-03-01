@@ -2148,7 +2148,7 @@ window.onload = () => {
                 const rect = noteDiv.getBoundingClientRect();
             
                 // السماح بالسحب فقط إذا بدأ اللمس من أول 30px من أعلى الديف
-                if (touchY - rect.top > 50) return;
+                if (touchY - rect.top > 40) return;
             
                 startY = touchY;
                 currentY = startY;
