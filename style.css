@@ -1390,4 +1390,13 @@ val div a ion-icon {
     background-color: rgba(255, 255, 255, 0.233);
 }
 
-
+.send {
+    font-size: 14px;
+    color: #8e8e8e;
+}
+.send a {
+    overflow: hidden;
+    display: inline-flex;
+    color: #5d63dc;
+    font-weight: 700;
+}
