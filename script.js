@@ -2020,17 +2020,6 @@ window.onload = () => {
             const div = document.createElement('div');
             div.className = 'overlay-note';
             div.id = 'overlay-note';
-            div.innerHTML = `
-                <div class="note">
-                    <span>نقدر ملاحظتك. يرجى مشاركة أي تعليقات أو اقتراحات لديك لمساعدتنا على التحسين.</span>
-                    <div class="name-note">إسم السؤال</div>
-                    <textarea class="description-note">الإجابة</textarea>
-                    <div>
-                        <button class="Wave-cloud send-note" disabled style="opacity:0.7;">إرسال الملاحظة</button>
-                        <button class="Wave-cloud join-group">انضم للجروب أولاً</button>
-                    </div>
-                </div>
-            `;
             document.body.appendChild(div);
             overlayNote = div;
         }
@@ -2155,7 +2144,13 @@ window.onload = () => {
     
         noteDiv.addEventListener('touchstart', (e) => {
             if (window.innerWidth <= 400) {
-                startY = e.touches[0].clientY;
+                const touchY = e.touches[0].clientY;
+                const rect = noteDiv.getBoundingClientRect();
+            
+                // السماح بالسحب فقط إذا بدأ اللمس من أول 30px من أعلى الديف
+                if (touchY - rect.top > 50) return;
+            
+                startY = touchY;
                 currentY = startY;
                 isDragging = true;
                 justDragged = false;
